@@ -1186,7 +1186,7 @@ class IdentityPoolCredentialsTest extends BaseSerializationTest {
   private void createCredentialsWithCertificate(
       X509Provider x509Provider, Map<String, Object> certificateMap) {
     Map<String, Object> credentialSourceMap = new HashMap<>();
-     credentialSourceMap.put("certificate", certificateMap);
+    credentialSourceMap.put("certificate", certificateMap);
     IdentityPoolCredentialSource credentialSource =
         new IdentityPoolCredentialSource(credentialSourceMap);
 
@@ -1280,29 +1280,21 @@ class IdentityPoolCredentialsTest extends BaseSerializationTest {
     }
   }
 
-   static class TestX509Provider extends X509Provider {
+  private static class TestX509Provider extends X509Provider {
     private final KeyStore keyStore;
-    private final String certPath;
-    private boolean throwOnGetKeyStore;
-    private boolean throwOnGetCertificatePath;
+    private final String certificatePath;
+    private boolean shouldThrowOnGetKeyStore = false;
+    private boolean shouldThrowOnGetCertificatePath = false;
 
-    public TestX509Provider(KeyStore keyStore, String certPath) {
+    TestX509Provider(KeyStore keyStore, String certificatePath) {
       super();
       this.keyStore = keyStore;
-      this.certPath = certPath;
-    }
-
-    public void setShouldThrowOnGetKeyStore(boolean throwOnGetKeyStore) {
-      this.throwOnGetKeyStore = throwOnGetKeyStore;
-    }
-
-    public void setShouldThrowOnGetCertificatePath(boolean throwOnGetCertificatePath) {
-      this.throwOnGetCertificatePath = throwOnGetCertificatePath;
+      this.certificatePath = certificatePath;
     }
 
     @Override
     public KeyStore getKeyStore() throws IOException {
-      if (throwOnGetKeyStore) {
+      if (shouldThrowOnGetKeyStore) {
         throw new IOException("Simulated IOException on get keystore");
       }
       return keyStore;
@@ -1310,10 +1302,18 @@ class IdentityPoolCredentialsTest extends BaseSerializationTest {
 
     @Override
     public String getCertificatePath() throws IOException {
-      if (throwOnGetCertificatePath) {
+      if (shouldThrowOnGetCertificatePath) {
         throw new IOException("Simulated IOException on certificate path");
       }
-      return certPath;
+      return certificatePath;
+    }
+
+    void setShouldThrowOnGetKeyStore(boolean shouldThrow) {
+      this.shouldThrowOnGetKeyStore = shouldThrow;
+    }
+
+    void setShouldThrowOnGetCertificatePath(boolean shouldThrow) {
+      this.shouldThrowOnGetCertificatePath = shouldThrow;
     }
   }
 }

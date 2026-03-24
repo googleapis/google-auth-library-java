@@ -36,10 +36,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.google.auth.oauth2.SystemEnvironmentProvider;
 import com.google.auth.oauth2.SystemPropertyProvider;
 import com.google.auth.oauth2.TestEnvironmentProvider;
-import com.google.auth.oauth2.TestPropertyProvider;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;

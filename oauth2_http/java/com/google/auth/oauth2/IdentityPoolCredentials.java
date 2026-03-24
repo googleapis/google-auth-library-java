@@ -33,7 +33,6 @@ package com.google.auth.oauth2;
 
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.mtls.MtlsHttpTransportFactory;
-import com.google.auth.mtls.MtlsUtils;
 import com.google.auth.mtls.X509Provider;
 import com.google.auth.oauth2.IdentityPoolCredentialSource.IdentityPoolCredentialSourceType;
 import com.google.common.annotations.VisibleForTesting;
@@ -219,6 +218,7 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
       this.x509Provider = x509Provider;
       return this;
     }
+
     /**
      * Sets the subject token supplier. The supplier should return a valid subject token string.
      *

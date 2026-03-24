@@ -196,7 +196,6 @@ public class AwsCredentials extends ExternalAccountCredentials {
     return this.regionalCredentialVerificationUrl;
   }
 
-
   @VisibleForTesting
   AwsSecurityCredentialsSupplier getAwsSecurityCredentialsSupplier() {
     return this.awsSecurityCredentialsSupplier;

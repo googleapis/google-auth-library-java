@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 /**
  * Represents the default system property provider.
- * 
+ *
  * <p>For internal use only.
  */
 public class SystemPropertyProvider implements PropertyProvider, Serializable {
