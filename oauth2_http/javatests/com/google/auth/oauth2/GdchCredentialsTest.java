@@ -164,18 +164,17 @@ class GdchCredentialsTest extends BaseSerializationTest {
             CA_CERT_PATH,
             TOKEN_SERVER_URI);
 
-    try {
-      GdchCredentials.fromJson(json);
-      fail("Should not be able to create GDCH credential without exception.");
-    } catch (IOException ex) {
-      assertTrue(
-          ex.getMessage()
-              .contains(
-                  String.format(
-                      "Error reading GDCH service account credential from JSON, "
-                          + "%s is misconfigured.",
-                      "format_version")));
-    }
+    IOException ex =
+        assertThrows(
+            IOException.class,
+            () -> GdchCredentials.fromJson(json));
+    assertTrue(
+        ex.getMessage()
+            .contains(
+                String.format(
+                    "Error reading GDCH service account credential from JSON, "
+                        + "%s is misconfigured.",
+                    "format_version")));
   }
 
   @Test
@@ -190,18 +189,17 @@ class GdchCredentialsTest extends BaseSerializationTest {
             CA_CERT_PATH,
             TOKEN_SERVER_URI);
 
-    try {
-      GdchCredentials.fromJson(json);
-      fail("Should not be able to create GDCH credential without exception.");
-    } catch (IOException ex) {
-      assertTrue(
-          ex.getMessage()
-              .contains(
-                  String.format(
-                      "Error reading GDCH service account credential from JSON, "
-                          + "%s is misconfigured.",
-                      "project")));
-    }
+    IOException ex =
+        assertThrows(
+            IOException.class,
+            () -> GdchCredentials.fromJson(json));
+    assertTrue(
+        ex.getMessage()
+            .contains(
+                String.format(
+                    "Error reading GDCH service account credential from JSON, "
+                        + "%s is misconfigured.",
+                    "project")));
   }
 
   @Test
@@ -216,18 +214,17 @@ class GdchCredentialsTest extends BaseSerializationTest {
             CA_CERT_PATH,
             TOKEN_SERVER_URI);
 
-    try {
-      GdchCredentials.fromJson(json);
-      fail("Should not be able to create GDCH credential without exception.");
-    } catch (IOException ex) {
-      assertTrue(
-          ex.getMessage()
-              .contains(
-                  String.format(
-                      "Error reading GDCH service account credential from JSON, "
-                          + "%s is misconfigured.",
-                      "private_key_id")));
-    }
+    IOException ex =
+        assertThrows(
+            IOException.class,
+            () -> GdchCredentials.fromJson(json));
+    assertTrue(
+        ex.getMessage()
+            .contains(
+                String.format(
+                    "Error reading GDCH service account credential from JSON, "
+                        + "%s is misconfigured.",
+                    "private_key_id")));
   }
 
   @Test
@@ -242,18 +239,17 @@ class GdchCredentialsTest extends BaseSerializationTest {
             CA_CERT_PATH,
             TOKEN_SERVER_URI);
 
-    try {
-      GdchCredentials.fromJson(json);
-      fail("Should not be able to create GDCH credential without exception.");
-    } catch (IOException ex) {
-      assertTrue(
-          ex.getMessage()
-              .contains(
-                  String.format(
-                      "Error reading GDCH service account credential from JSON, "
-                          + "%s is misconfigured.",
-                      "private_key")));
-    }
+    IOException ex =
+        assertThrows(
+            IOException.class,
+            () -> GdchCredentials.fromJson(json));
+    assertTrue(
+        ex.getMessage()
+            .contains(
+                String.format(
+                    "Error reading GDCH service account credential from JSON, "
+                        + "%s is misconfigured.",
+                    "private_key")));
   }
 
   @Test
@@ -268,18 +264,17 @@ class GdchCredentialsTest extends BaseSerializationTest {
             CA_CERT_PATH,
             TOKEN_SERVER_URI);
 
-    try {
-      GdchCredentials.fromJson(json);
-      fail("Should not be able to create GDCH credential without exception.");
-    } catch (IOException ex) {
-      assertTrue(
-          ex.getMessage()
-              .contains(
-                  String.format(
-                      "Error reading GDCH service account credential from JSON, "
-                          + "%s is misconfigured.",
-                      "name")));
-    }
+    IOException ex =
+        assertThrows(
+            IOException.class,
+            () -> GdchCredentials.fromJson(json));
+    assertTrue(
+        ex.getMessage()
+            .contains(
+                String.format(
+                    "Error reading GDCH service account credential from JSON, "
+                        + "%s is misconfigured.",
+                    "name")));
   }
 
   @Test
@@ -309,18 +304,17 @@ class GdchCredentialsTest extends BaseSerializationTest {
             CA_CERT_PATH,
             null);
 
-    try {
-      GdchCredentials.fromJson(json);
-      fail("Should not be able to create GDCH credential without exception.");
-    } catch (IOException ex) {
-      assertTrue(
-          ex.getMessage()
-              .contains(
-                  String.format(
-                      "Error reading GDCH service account credential from JSON, "
-                          + "%s is misconfigured.",
-                      "token_uri")));
-    }
+    IOException ex =
+        assertThrows(
+            IOException.class,
+            () -> GdchCredentials.fromJson(json));
+    assertTrue(
+        ex.getMessage()
+            .contains(
+                String.format(
+                    "Error reading GDCH service account credential from JSON, "
+                        + "%s is misconfigured.",
+                    "token_uri")));
   }
 
   @Test
@@ -335,14 +329,13 @@ class GdchCredentialsTest extends BaseSerializationTest {
             CA_CERT_PATH,
             TOKEN_SERVER_URI);
 
-    try {
-      GdchCredentials.fromJson(json);
-      fail("Should not be able to create GDCH credential without exception.");
-    } catch (IOException ex) {
-      assertTrue(
-          ex.getMessage()
-              .contains(String.format("Only format version %s is supported", FORMAT_VERSION)));
-    }
+    IOException ex =
+        assertThrows(
+            IOException.class,
+            () -> GdchCredentials.fromJson(json));
+    assertTrue(
+        ex.getMessage()
+            .contains(String.format("Only format version %s is supported", FORMAT_VERSION)));
   }
 
   @Test
@@ -357,12 +350,11 @@ class GdchCredentialsTest extends BaseSerializationTest {
             "/path/to/missing/file",
             TOKEN_SERVER_URI);
 
-    try {
-      GdchCredentials.fromJson(json);
-      fail("Should not be able to create GDCH credential without exception.");
-    } catch (IOException ex) {
-      assertTrue(ex.getMessage().contains("Error reading certificate file from CA cert path"));
-    }
+    IOException ex =
+        assertThrows(
+            IOException.class,
+            () -> GdchCredentials.fromJson(json));
+    assertTrue(ex.getMessage().contains("Error reading certificate file from CA cert path"));
   }
 
   @Test
@@ -449,12 +441,11 @@ class GdchCredentialsTest extends BaseSerializationTest {
     json.put("type", "invalid_type");
     InputStream stream = TestUtils.jsonToInputStream(json);
 
-    try {
-      GdchCredentials.fromStream(stream);
-      fail("Should not be able to create GDCH credential with invalid type.");
-    } catch (IOException ex) {
-      assertTrue(ex.getMessage().contains("not recognized"));
-    }
+    IOException ex =
+        assertThrows(
+            IOException.class,
+            () -> GdchCredentials.fromStream(stream));
+    assertTrue(ex.getMessage().contains("not recognized"));
   }
 
   @Test
@@ -530,12 +521,11 @@ class GdchCredentialsTest extends BaseSerializationTest {
             TOKEN_SERVER_URI);
     GdchCredentials credentials = GdchCredentials.fromJson(json);
 
-    try {
-      credentials.createWithGdchAudience((String) null);
-      fail("Should not be able to create GDCH credential without exception.");
-    } catch (IllegalArgumentException ex) {
-      assertTrue(ex.getMessage().contains("Audience are not configured for GDCH service account"));
-    }
+    IllegalArgumentException ex =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> credentials.createWithGdchAudience((String) null));
+    assertTrue(ex.getMessage().contains("Audience are not configured for GDCH service account"));
   }
 
   @Test
@@ -551,12 +541,11 @@ class GdchCredentialsTest extends BaseSerializationTest {
             TOKEN_SERVER_URI);
     GdchCredentials credentials = GdchCredentials.fromJson(json);
 
-    try {
-      credentials.createWithGdchAudience("");
-      fail("Should not be able to create GDCH credential without exception.");
-    } catch (IllegalArgumentException ex) {
-      assertTrue(ex.getMessage().contains("Audience are not configured for GDCH service account"));
-    }
+    IllegalArgumentException ex =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> credentials.createWithGdchAudience(""));
+    assertTrue(ex.getMessage().contains("Audience are not configured for GDCH service account"));
   }
 
   @Test
