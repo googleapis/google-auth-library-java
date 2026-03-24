@@ -341,8 +341,8 @@ public class GdchCredentials extends GoogleCredentials {
     try {
       assertion = signUsingEsSha256(privateKey, jsonFactory, header, payload);
     } catch (GeneralSecurityException e) {
-      throw new IOException(
-          "Error signing service account access token request with private key.", e);
+      throw new GoogleAuthException(
+          false, 0, "Error signing service account access token request with private key.", e);
     }
 
     return assertion;
@@ -689,7 +689,7 @@ public class GdchCredentials extends GoogleCredentials {
       JsonFactory jsonFactory,
       JsonWebSignature.Header header,
       JsonWebToken.Payload payload)
-      throws GeneralSecurityException, IOException {
+      throws GeneralSecurityException, GoogleAuthException {
 
     // 1. Construct the JWS Signing Input: Base64URL(UTF8(Header)) + '.' + Base64URL(UTF8(Payload))
     String content =
@@ -725,10 +725,11 @@ public class GdchCredentials extends GoogleCredentials {
    * @throws IOException If the DER format is invalid.
    */
   @VisibleForTesting
-  static byte[] transcodeDerToConcat(byte[] derSignature, int outputLength) throws IOException {
+  static byte[] transcodeDerToConcat(byte[] derSignature, int outputLength)
+      throws GoogleAuthException {
     // Validate basic ASN.1 DER structure (0x30 = SEQUENCE)
     if (derSignature.length < 8 || derSignature[0] != 0x30) {
-      throw new IOException("Invalid DER signature format.");
+      throw new GoogleAuthException(false, 0, "Invalid DER signature format.", null);
     }
 
     int offset = 2;
@@ -740,12 +741,12 @@ public class GdchCredentials extends GoogleCredentials {
     }
 
     if (derSignature.length - offset != seqLength) {
-      throw new IOException("Invalid DER signature length.");
+      throw new GoogleAuthException(false, 0, "Invalid DER signature length.", null);
     }
 
     // Parse Integer R (0x02 = INTEGER)
     if (derSignature[offset++] != 0x02) {
-      throw new IOException("Expected INTEGER for R.");
+      throw new GoogleAuthException(false, 0, "Expected INTEGER for R.", null);
     }
     int rLength = derSignature[offset++];
     // Skip leading zero byte if it exists (DER integers are signed; zero is added to stay positive)
@@ -759,7 +760,7 @@ public class GdchCredentials extends GoogleCredentials {
 
     // Parse Integer S
     if (derSignature[offset++] != 0x02) {
-      throw new IOException("Expected INTEGER for S.");
+      throw new GoogleAuthException(false, 0, "Expected INTEGER for S.", null);
     }
     int sLength = derSignature[offset++];
     if (derSignature[offset] == 0x00 && sLength > 1 && (derSignature[offset + 1] & 0x80) != 0) {
@@ -772,10 +773,13 @@ public class GdchCredentials extends GoogleCredentials {
     // Concatenate r and s into fixed-length segments (32 bytes each for ES256)
     int keySizeBytes = outputLength / 2;
     if (r.length > keySizeBytes || s.length > keySizeBytes) {
-      throw new IOException(
+      throw new GoogleAuthException(
+          false,
+          0,
           String.format(
               "Invalid R or S length. R: %d, S: %d, Expected: %d",
-              r.length, s.length, keySizeBytes));
+              r.length, s.length, keySizeBytes),
+          null);
     }
 
     byte[] result = new byte[outputLength];
