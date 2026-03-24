@@ -101,6 +101,13 @@ public class TestUtils {
     }
   }
 
+  /**
+   * Parses a URI query string into a map of key-value pairs.
+   *
+   * @param query The URI query string (e.g., "key1=val1&key2=val2").
+   * @return A map of decoded keys to decoded values.
+   * @throws IOException If the query string is malformed.
+   */
   public static Map<String, String> parseQuery(String query) throws IOException {
     Map<String, String> map = new HashMap<>();
     Iterable<String> entries = Splitter.on('&').split(query);
@@ -116,6 +123,13 @@ public class TestUtils {
     return map;
   }
 
+  /**
+   * Parses a JSON string into a map of key-value pairs.
+   *
+   * @param content The JSON string representation of a flat object.
+   * @return A map of keys to string representations of their values.
+   * @throws IOException If the JSON is malformed.
+   */
   public static Map<String, String> parseJson(String content) throws IOException {
     GenericJson json = JSON_FACTORY.fromString(content, GenericJson.class);
     Map<String, String> map = new HashMap<>();
