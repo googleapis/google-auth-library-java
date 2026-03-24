@@ -388,18 +388,18 @@ public class GdchCredentials extends GoogleCredentials {
    *
    * @return the audience string
    */
-  public final String getApiAudienceString() {
+  public final String getGdchAudience() {
     return apiAudience;
   }
 
   /**
-   * NOTE: This method is obsolete, please use getApiAudienceString() instead. Returns a URI
+   * NOTE: This method is obsolete, please use getGdchAudience() instead. Returns a URI
    * representation of the underlying audience string set for this credentials object. This method
    * may fail if the underlying audience string does not conform to a URI format.
    *
    * @return a URI object representing the audience of the credentials
    */
-  @ObsoleteApi("Use getApiAudienceString() instead.")
+  @ObsoleteApi("Use getGdchAudience() instead.")
   public final URI getApiAudience() {
     if (Strings.isNullOrEmpty(apiAudience)) {
       return null;
