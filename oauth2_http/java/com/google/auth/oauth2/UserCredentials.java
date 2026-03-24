@@ -278,6 +278,10 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
     HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
     HttpRequest request = requestFactory.buildPostRequest(new GenericUrl(tokenServerUri), content);
 
+    // Disable automatic logging by google-http-java-client to prevent leakage of sensitive tokens.
+    // Client Library Debug Logging via LoggingUtils is used instead.
+    request.setLoggingEnabled(false);
+
     MetricsUtils.setMetricsHeader(
         request,
         MetricsUtils.getGoogleCredentialsMetricsHeader(
@@ -357,6 +361,13 @@ public class UserCredentials extends GoogleCredentials implements IdTokenProvide
         quotaProjectId);
   }
 
+  /**
+   * Returns a string representation of this credential.
+   *
+   * <p><b>Security Warning:</b> The output of this method includes sensitive fields such as the
+   * refresh token and request metadata containing the raw Bearer access token. Do not log this
+   * output in production environments as it may expose sensitive credentials.
+   */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)

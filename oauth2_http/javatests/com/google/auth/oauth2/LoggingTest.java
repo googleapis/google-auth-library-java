@@ -48,6 +48,9 @@ import static com.google.auth.oauth2.UserCredentialsTest.CLIENT_SECRET;
 import static com.google.auth.oauth2.UserCredentialsTest.REFRESH_TOKEN;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -515,10 +518,233 @@ class LoggingTest {
 
     assertEquals("Response Payload for ID token", testAppender.events.get(2).getMessage());
     assertEquals(1, testAppender.events.get(2).getKeyValuePairs().size());
-    assertEquals("idToken", testAppender.events.get(2).getKeyValuePairs().get(0).key);
-    assertEquals(
-        ComputeEngineCredentialsTest.FULL_ID_TOKEN,
-        testAppender.events.get(2).getKeyValuePairs().get(0).value);
+    assertEquals("id_token", testAppender.events.get(2).getKeyValuePairs().get(0).key);
+    // id_token is now in SENSITIVE_KEYS, so the value should be masked (SHA-256 hashed)
+    assertFalse(
+        ComputeEngineCredentialsTest.FULL_ID_TOKEN.equals(
+            testAppender.events.get(2).getKeyValuePairs().get(0).value),
+        "id_token value should be masked, not logged as raw token");
     testAppender.stop();
+  }
+
+  @Test
+  void serviceAccountCredentials_exchangeToken_masksSensitiveTokens() throws IOException {
+    TestAppender testAppender = setupTestLogger(ServiceAccountCredentials.class);
+    GoogleCredentials credentials =
+        ServiceAccountCredentialsTest.createDefaultBuilderWithToken(ACCESS_TOKEN)
+            .setScopes(SCOPES)
+            .build();
+    Map<String, List<String>> metadata = credentials.getRequestMetadata(CALL_URI);
+
+    TestUtils.assertContainsBearerToken(metadata, ACCESS_TOKEN);
+
+    assertEquals(3, testAppender.events.size());
+
+    // Verify response payload has tokens masked
+    assertEquals("Response payload", testAppender.events.get(2).getMessage());
+    boolean foundAccessToken = false;
+    for (KeyValuePair kvp : testAppender.events.get(2).getKeyValuePairs()) {
+      if ("access_token".equals(kvp.key)) {
+        foundAccessToken = true;
+        // access_token is in SENSITIVE_KEYS, so the value should be SHA-256 hashed
+        assertNotNull(kvp.value);
+        assertNotEquals(
+            ACCESS_TOKEN,
+            kvp.value,
+            "access_token value should be masked, not logged as raw token");
+        // SHA-256 hex string is 64 characters
+        assertEquals(
+            64,
+            ((String) kvp.value).length(),
+            "access_token should be masked as a SHA-256 hash (64 hex chars)");
+      }
+    }
+    assertTrue(foundAccessToken, "Expected access_token in response payload logs");
+    testAppender.stop();
+  }
+
+  @Test
+  void stsRequestHandler_exchangeToken_masksSensitiveTokens() throws IOException {
+    TestAppender testAppender = setupTestLogger(StsRequestHandler.class);
+    MockStsTransport transport = new MockStsTransport();
+
+    StsTokenExchangeRequest tokenRequest =
+        StsTokenExchangeRequest.newBuilder(
+                "SECRET_SUBJECT_TOKEN", ExternalAccountCredentials.SubjectTokenTypes.JWT.toString())
+            .build();
+
+    StsRequestHandler stsRequestHandler =
+        StsRequestHandler.newBuilder(
+                "https://sts.googleapis.com/v1/token",
+                tokenRequest,
+                transport.createRequestFactory())
+            .build();
+
+    stsRequestHandler.exchangeToken();
+
+    assertEquals(3, testAppender.events.size());
+
+    // 1. Request Log
+    ILoggingEvent requestLog = testAppender.events.get(0);
+    assertEquals("Sending request for token exchange", requestLog.getMessage());
+    String requestPayload = null;
+    for (KeyValuePair kvp : requestLog.getKeyValuePairs()) {
+      if ("request.payload".equals(kvp.key)) {
+        requestPayload = (String) kvp.value;
+      }
+    }
+    assertNotNull(requestPayload);
+    assertTrue(isValidJson(requestPayload));
+    assertFalse(requestPayload.contains("SECRET_SUBJECT_TOKEN"));
+
+    // 2. Response Log (Headers)
+    ILoggingEvent responseLog = testAppender.events.get(1);
+    assertEquals("Received response for token exchange", responseLog.getMessage());
+
+    // 3. Response Payload Log
+    ILoggingEvent payloadLog = testAppender.events.get(2);
+    assertEquals("Response payload for token exchange", payloadLog.getMessage());
+
+    boolean foundAccessToken = false;
+    for (KeyValuePair kvp : payloadLog.getKeyValuePairs()) {
+      if ("access_token".equals(kvp.key)) {
+        foundAccessToken = true;
+        // access_token is in SENSITIVE_KEYS, so the value should be SHA-256 hashed, not raw
+        assertNotNull(kvp.value);
+        assertNotEquals(
+            "accessToken",
+            kvp.value,
+            "access_token value should be masked, not logged as raw token");
+        // SHA-256 hex string is 64 characters
+        assertEquals(
+            64,
+            ((String) kvp.value).length(),
+            "access_token should be masked as a SHA-256 hash (64 hex chars)");
+      }
+    }
+    assertTrue(foundAccessToken);
+
+    testAppender.stop();
+  }
+
+  // We specifically test ImpersonatedCredentials here because it constructs its HTTP requests
+  // using JsonHttpContent, unlike most other credentials which use UrlEncodedContent.
+  @Test
+  void impersonatedCredentials_exchangeToken_masksSensitiveTokens()
+      throws IOException, IllegalStateException {
+    TestAppender testAppender = setupTestLogger(ImpersonatedCredentials.class);
+    MockIAMCredentialsServiceTransportFactory mockTransportFactory =
+        new MockIAMCredentialsServiceTransportFactory();
+    mockTransportFactory.getTransport().setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+    mockTransportFactory.getTransport().setAccessToken(ACCESS_TOKEN);
+    mockTransportFactory.getTransport().setExpireTime(getDefaultExpireTime());
+    mockTransportFactory.getTransport().addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
+    ImpersonatedCredentials targetCredentials =
+        ImpersonatedCredentials.create(
+            ImpersonatedCredentialsTest.getSourceCredentials(),
+            IMPERSONATED_CLIENT_EMAIL,
+            null,
+            IMMUTABLE_SCOPES_LIST,
+            VALID_LIFETIME,
+            mockTransportFactory);
+
+    targetCredentials.refreshAccessToken();
+
+    assertEquals(3, testAppender.events.size());
+
+    // 1. Verify request log contains properly formatted payload (JsonHttpContent masking)
+    ILoggingEvent requestLog = testAppender.events.get(0);
+    assertEquals("Sending request to refresh access token", requestLog.getMessage());
+    String requestPayload = null;
+    for (KeyValuePair kvp : requestLog.getKeyValuePairs()) {
+      if ("request.payload".equals(kvp.key)) {
+        requestPayload = (String) kvp.value;
+      }
+    }
+    // When logged at DEBUG level, the request payload should be present and valid JSON.
+    if (requestPayload != null) {
+      assertTrue(isValidJson(requestPayload), "Request payload should be valid JSON");
+    }
+
+    // 2. Verify response payload has tokens masked
+    assertEquals("Response payload for access token", testAppender.events.get(2).getMessage());
+    boolean foundAccessToken = false;
+    for (KeyValuePair kvp : testAppender.events.get(2).getKeyValuePairs()) {
+      if ("accessToken".equals(kvp.key)) {
+        foundAccessToken = true;
+        assertNotNull(kvp.value);
+        assertNotEquals(
+            ACCESS_TOKEN, kvp.value, "accessToken value should be masked, not logged as raw token");
+        // SHA-256 hex string is 64 characters
+        assertEquals(
+            64,
+            ((String) kvp.value).length(),
+            "accessToken should be masked as a SHA-256 hash (64 hex chars)");
+      }
+    }
+    assertTrue(foundAccessToken, "Expected accessToken in response payload logs");
+    testAppender.stop();
+  }
+
+  // We specifically use ImpersonatedCredentials for this test because its request payload
+  // is formatted using JsonHttpContent, whereas other credentials primarily use UrlEncodedContent.
+  @Test
+  void impersonatedCredentials_requestPayload_masksJsonHttpContentSensitiveKeys()
+      throws IOException, IllegalStateException {
+    // Set DEBUG level to ensure request payloads are logged
+    Logger logger = LoggerFactory.getLogger(ImpersonatedCredentials.class);
+    ch.qos.logback.classic.Logger logbackLogger = (ch.qos.logback.classic.Logger) logger;
+    ch.qos.logback.classic.Level previousLevel = logbackLogger.getLevel();
+    logbackLogger.setLevel(ch.qos.logback.classic.Level.DEBUG);
+
+    TestAppender testAppender = new TestAppender();
+    testAppender.start();
+    logbackLogger.addAppender(testAppender);
+
+    try {
+      MockIAMCredentialsServiceTransportFactory mockTransportFactory =
+          new MockIAMCredentialsServiceTransportFactory();
+      mockTransportFactory.getTransport().setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
+      mockTransportFactory.getTransport().setAccessToken(ACCESS_TOKEN);
+      mockTransportFactory.getTransport().setExpireTime(getDefaultExpireTime());
+      mockTransportFactory
+          .getTransport()
+          .addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
+      ImpersonatedCredentials targetCredentials =
+          ImpersonatedCredentials.create(
+              ImpersonatedCredentialsTest.getSourceCredentials(),
+              IMPERSONATED_CLIENT_EMAIL,
+              null,
+              IMMUTABLE_SCOPES_LIST,
+              VALID_LIFETIME,
+              mockTransportFactory);
+
+      targetCredentials.refreshAccessToken();
+
+      // Find the request log event
+      ILoggingEvent requestLog = testAppender.events.get(0);
+      assertEquals("Sending request to refresh access token", requestLog.getMessage());
+
+      // Extract request.payload
+      String requestPayload = null;
+      for (KeyValuePair kvp : requestLog.getKeyValuePairs()) {
+        if ("request.payload".equals(kvp.key)) {
+          requestPayload = (String) kvp.value;
+        }
+      }
+
+      // At DEBUG level, request payload must be present
+      assertNotNull(requestPayload, "Request payload should be logged at DEBUG level");
+      assertTrue(isValidJson(requestPayload), "Request payload should be valid JSON");
+
+      // The request payload uses JsonHttpContent with fields: delegates, scope, lifetime. None of
+      // these are in SENSITIVE_KEYS, so they should appear as-is (not hashed).
+      assertFalse(
+          requestPayload.contains("\"delegates\":null"),
+          "Payload should be properly serialized from JsonHttpContent");
+    } finally {
+      logbackLogger.setLevel(previousLevel);
+      testAppender.stop();
+    }
   }
 }

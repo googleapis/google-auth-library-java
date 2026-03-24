@@ -57,6 +57,9 @@ import javax.annotation.Nullable;
 /** Handles an interactive 3-Legged-OAuth2 (3LO) user consent authorization. */
 public class UserAuthorizer {
 
+  private static final LoggerProvider LOGGER_PROVIDER =
+      LoggerProvider.forClazz(UserAuthorizer.class);
+
   /**
    * Represents the client authentication types as specified in RFC 7591.
    *
@@ -382,7 +385,14 @@ public class UserAuthorizer {
 
     HttpRequestFactory requestFactory = transportFactory.create().createRequestFactory();
     HttpRequest tokenRequest = requestFactory.buildPostRequest(revokeUrl, content);
-    tokenRequest.execute();
+    // Disable automatic logging by google-http-java-client to prevent leakage of sensitive tokens.
+    // Client Library Debug Logging via LoggingUtils is used instead.
+    tokenRequest.setLoggingEnabled(false);
+
+    LoggingUtils.logRequest(tokenRequest, LOGGER_PROVIDER, "Sending request to revoke token");
+    HttpResponse response = tokenRequest.execute();
+    LoggingUtils.logResponse(
+        response, LOGGER_PROVIDER, "Received response for revoke token request");
 
     if (deleteTokenException != null) {
       throw deleteTokenException;
@@ -472,9 +482,19 @@ public class UserAuthorizer {
                   clientId.getClientId(), clientId.getClientSecret()));
     }
 
+    // Disable automatic logging by google-http-java-client to prevent leakage of sensitive tokens.
+    // Client Library Debug Logging via LoggingUtils is used instead.
+    tokenRequest.setLoggingEnabled(false);
+
+    LoggingUtils.logRequest(
+        tokenRequest, LOGGER_PROVIDER, "Sending request to exchange code for tokens");
     HttpResponse tokenResponse = tokenRequest.execute();
+    LoggingUtils.logResponse(
+        tokenResponse, LOGGER_PROVIDER, "Received response for exchange code for tokens request");
 
     GenericJson parsedTokens = tokenResponse.parseAs(GenericJson.class);
+    LoggingUtils.logResponsePayload(
+        parsedTokens, LOGGER_PROVIDER, "Response payload for token exchange");
     String accessTokenValue =
         OAuth2Utils.validateString(parsedTokens, "access_token", FETCH_TOKEN_ERROR);
     int expiresInSecs = OAuth2Utils.validateInt32(parsedTokens, "expires_in", FETCH_TOKEN_ERROR);

@@ -40,6 +40,8 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.PemReader;
 import com.google.api.client.util.PemReader.Section;
+import com.google.api.client.util.SecurityUtils;
+import com.google.api.core.InternalApi;
 import com.google.auth.http.AuthHttpConstants;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.base.Strings;
@@ -77,6 +79,7 @@ import java.util.Set;
  * com.google.auth} family. Application developers should avoid using these classes directly; they
  * are not part of the public API.
  */
+@InternalApi
 public class OAuth2Utils {
 
   enum Pkcs8Algorithm {
@@ -270,7 +273,7 @@ public class OAuth2Utils {
    * @throws IOException if the PKCS#8 data is invalid or if an unexpected exception occurs during
    *     key creation.
    */
-  static PrivateKey privateKeyFromPkcs8(String privateKeyPkcs8) throws IOException {
+  public static PrivateKey privateKeyFromPkcs8(String privateKeyPkcs8) throws IOException {
     return privateKeyFromPkcs8(privateKeyPkcs8, Pkcs8Algorithm.RSA);
   }
 
@@ -283,7 +286,7 @@ public class OAuth2Utils {
    * @throws IOException if the PKCS#8 data is invalid or if an unexpected exception occurs during
    *     key creation.
    */
-  static PrivateKey privateKeyFromPkcs8(String privateKeyPkcs8, Pkcs8Algorithm algorithm)
+  public static PrivateKey privateKeyFromPkcs8(String privateKeyPkcs8, Pkcs8Algorithm algorithm)
       throws IOException {
     Reader reader = new StringReader(privateKeyPkcs8);
     Section section = PemReader.readFirstSectionAndClose(reader, "PRIVATE KEY");

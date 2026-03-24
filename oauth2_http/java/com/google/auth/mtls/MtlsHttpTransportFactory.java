@@ -32,6 +32,7 @@
 package com.google.auth.mtls;
 
 import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.core.InternalApi;
 import com.google.auth.http.HttpTransportFactory;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
@@ -45,6 +46,7 @@ import java.util.Objects;
  * <p><b>Warning:</b> This class is considered internal and is not intended for direct use by
  * library consumers. Its API and behavior may change without notice.
  */
+@InternalApi
 public class MtlsHttpTransportFactory implements HttpTransportFactory {
   private final KeyStore mtlsKeyStore;
 

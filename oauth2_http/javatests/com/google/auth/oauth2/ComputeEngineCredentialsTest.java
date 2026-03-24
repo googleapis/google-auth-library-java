@@ -1141,6 +1141,60 @@ class ComputeEngineCredentialsTest extends BaseSerializationTest {
         GoogleAuthException.class, () -> credentials.idTokenWithAudience("Audience", null));
   }
 
+  @Test
+  void getProjectId_metadataServerSuccess() {
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    transportFactory.transport =
+        new MockMetadataServerTransport() {
+          @Override
+          public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
+            return new MockLowLevelHttpRequest(url) {
+              @Override
+              public LowLevelHttpResponse execute() throws IOException {
+                return new MockLowLevelHttpResponse()
+                    .setStatusCode(HttpStatusCodes.STATUS_CODE_OK)
+                    .setContent("some-project-id");
+              }
+            };
+          }
+        };
+
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+    String projectId = credentials.getProjectId();
+    assertEquals("some-project-id", projectId);
+  }
+
+  @Test
+  void getProjectId_metadataServerFailure_404StatusCode() {
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    transportFactory.transport.setStatusCode(HttpStatusCodes.STATUS_CODE_SERVICE_UNAVAILABLE);
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+    assertNull(credentials.getProjectId());
+  }
+
+  @Test
+  void getProjectId_metadataServerFailure_otherStatusCode() {
+    MockMetadataServerTransportFactory transportFactory = new MockMetadataServerTransportFactory();
+    transportFactory.transport.setStatusCode(HttpStatusCodes.STATUS_CODE_UNAUTHORIZED);
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+    assertNull(credentials.getProjectId());
+  }
+
+  @Test
+  void getProjectId_explicitSet_noMDsCall() {
+    MockRequestCountingTransportFactory transportFactory =
+        new MockRequestCountingTransportFactory();
+    ComputeEngineCredentials credentials =
+        ComputeEngineCredentials.newBuilder().setHttpTransportFactory(transportFactory).build();
+    credentials.setProjectId("explicit.project_id");
+
+    assertEquals("explicit.project_id", credentials.getProjectId());
+    assertEquals(0, transportFactory.transport.getRequestCount());
+  }
+
   static class MockMetadataServerTransportFactory implements HttpTransportFactory {
 
     MockMetadataServerTransport transport =
