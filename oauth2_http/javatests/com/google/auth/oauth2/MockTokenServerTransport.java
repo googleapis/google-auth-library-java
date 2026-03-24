@@ -426,6 +426,7 @@ public class MockTokenServerTransport extends MockHttpTransport {
     }
     return TestUtils.parseQuery(content);
   }
+
   private void validateAdditionalParameters(Map<String, String> query) {
     if (additionalParameters.containsKey(query.get("code"))) {
       Map<String, String> additionalParametersMap = additionalParameters.get(query.get("code"));

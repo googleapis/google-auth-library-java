@@ -566,7 +566,7 @@ public class GdchCredentials extends GoogleCredentials {
     public Builder setGdchAudience(URI apiAudience) {
       if (apiAudience == null) {
         throw new IllegalArgumentException(
-            "Audience cannot be null or empty for GDCH service account credentials.");
+            "Audience cannot be null for GDCH service account credentials.");
       }
       this.apiAudience = apiAudience.toString();
       return this;

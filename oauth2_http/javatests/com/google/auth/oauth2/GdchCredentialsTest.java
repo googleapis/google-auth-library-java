@@ -1207,8 +1207,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
     IllegalArgumentException ex =
         assertThrows(IllegalArgumentException.class, () -> builder.setGdchAudience((URI) null));
     assertTrue(
-        ex.getMessage()
-            .contains("Audience cannot be null or empty for GDCH service account credentials."));
+        ex.getMessage().contains("Audience cannot be null for GDCH service account credentials."));
   }
 
   static GenericJson writeGdchServiceAccountJson(
