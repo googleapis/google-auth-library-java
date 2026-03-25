@@ -436,6 +436,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
    * @return the credentials defined by the JSON
    * @throws IOException if the credential cannot be created from the JSON.
    */
+  @SuppressWarnings("unchecked")
   static ImpersonatedCredentials fromJson(
       Map<String, Object> json, HttpTransportFactory transportFactory) throws IOException {
     checkNotNull(json);
@@ -790,7 +791,10 @@ public class ImpersonatedCredentials extends GoogleCredentials
     /**
      * @param sourceCredentials The source credentials to use for impersonation.
      * @param targetPrincipal The service account to impersonate.
+     * @deprecated Use {@link #Builder(ImpersonatedCredentials)} instead. This constructor will be
+     *     removed in a future release.
      */
+    @Deprecated
     protected Builder(GoogleCredentials sourceCredentials, String targetPrincipal) {
       this.sourceCredentials = sourceCredentials;
       this.targetPrincipal = targetPrincipal;
