@@ -678,7 +678,7 @@ public class ImpersonatedCredentials extends GoogleCredentials
         expirationInstant = Instant.parse(expireTime);
       }
     } catch (DateTimeException e) {
-      throw new IOException("Unparseable date: \"" + expireTime + "\"", e);
+      throw new IOException("Error parsing expireTime: " + expireTime, e);
     }
     return new AccessToken(accessToken, Date.from(expirationInstant));
   }
