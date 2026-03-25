@@ -35,7 +35,7 @@ import com.google.api.client.util.Clock;
 import com.google.api.core.InternalApi;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.common.annotations.VisibleForTesting;
-import java.util.concurrent.CompletableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import javax.annotation.Nullable;
@@ -72,7 +72,7 @@ final class RegionalAccessBoundaryManager {
    * indicates a background refresh is already in progress. It also provides a handle for
    * observability and unit testing to track the background task's lifecycle.
    */
-  private final AtomicReference<CompletableFuture<RegionalAccessBoundary>> refreshFuture =
+  private final AtomicReference<SettableFuture<RegionalAccessBoundary>> refreshFuture =
       new AtomicReference<>();
 
   private final AtomicReference<CooldownState> cooldownState =
@@ -137,7 +137,7 @@ final class RegionalAccessBoundaryManager {
       return;
     }
 
-    CompletableFuture<RegionalAccessBoundary> future = new CompletableFuture<>();
+    SettableFuture<RegionalAccessBoundary> future = SettableFuture.create();
     // Atomically check if a refresh is already running. If compareAndSet returns true,
     // this thread "won the race" and is responsible for starting the background task.
     // All other concurrent threads will return false and exit immediately.
@@ -152,10 +152,10 @@ final class RegionalAccessBoundaryManager {
               cachedRAB.set(newRAB);
               resetCooldown();
               // Complete the future so monitors (like unit tests) know we are done.
-              future.complete(newRAB);
+              future.set(newRAB);
             } catch (Exception e) {
               handleRefreshFailure(e);
-              future.completeExceptionally(e);
+              future.setException(e);
             } finally {
               // Open the gate again for future refresh requests.
               refreshFuture.set(null);
@@ -179,7 +179,7 @@ final class RegionalAccessBoundaryManager {
         // If scheduling fails (e.g., RejectedExecutionException, OutOfMemoryError for threads),
         // the task's finally block will never execute. We must release the lock here.
         refreshFuture.set(null);
-        future.completeExceptionally(e);
+        future.setException(e);
         handleRefreshFailure(
             new Exception("Regional Access Boundary background refresh failed to schedule", e));
       }
