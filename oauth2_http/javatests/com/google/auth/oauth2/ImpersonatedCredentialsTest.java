@@ -709,7 +709,7 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
 
   @Test
   void refreshAccessToken_invalidDate() throws IllegalStateException {
-    String expectedMessage = "Unparseable date";
+    String expectedMessage = "Error parsing expireTime: ";
     mockTransportFactory.getTransport().setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
     mockTransportFactory.getTransport().setAccessToken("foo");
     mockTransportFactory.getTransport().setExpireTime("1973-09-29T15:01:23");
