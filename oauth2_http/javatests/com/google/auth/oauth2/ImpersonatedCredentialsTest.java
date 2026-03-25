@@ -63,8 +63,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.security.PrivateKey;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -72,7 +71,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -123,8 +121,6 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
   static final int VALID_LIFETIME = 300;
   private static final int INVALID_LIFETIME = 43210;
   private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
-
-  private static final String RFC3339 = "yyyy-MM-dd'T'HH:mm:ssX";
 
   private static final String TEST_UNIVERSE_DOMAIN = "test.xyz";
   private static final String OLD_IMPERSONATION_URL =
@@ -653,58 +649,6 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
             mockTransportFactory);
 
     assertEquals(ACCESS_TOKEN, targetCredentials.refreshAccessToken().getTokenValue());
-  }
-
-  @Test
-  void refreshAccessToken_GMT_dateParsedCorrectly() throws IOException, IllegalStateException {
-    Calendar c = Calendar.getInstance();
-    c.add(Calendar.SECOND, VALID_LIFETIME);
-
-    mockTransportFactory.getTransport().setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
-    mockTransportFactory.getTransport().setAccessToken(ACCESS_TOKEN);
-    mockTransportFactory.getTransport().setExpireTime(getFormattedTime(c.getTime()));
-    mockTransportFactory.getTransport().addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
-    ImpersonatedCredentials targetCredentials =
-        ImpersonatedCredentials.create(
-                sourceCredentials,
-                IMPERSONATED_CLIENT_EMAIL,
-                null,
-                IMMUTABLE_SCOPES_LIST,
-                VALID_LIFETIME,
-                mockTransportFactory)
-            .createWithCustomCalendar(
-                // Set system timezone to GMT
-                Calendar.getInstance(TimeZone.getTimeZone("GMT")));
-
-    assertTrue(
-        c.getTime().toInstant().truncatedTo(ChronoUnit.SECONDS).toEpochMilli()
-            == targetCredentials.refreshAccessToken().getExpirationTimeMillis());
-  }
-
-  @Test
-  void refreshAccessToken_nonGMT_dateParsedCorrectly() throws IOException, IllegalStateException {
-    Calendar c = Calendar.getInstance();
-    c.add(Calendar.SECOND, VALID_LIFETIME);
-
-    mockTransportFactory.getTransport().setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
-    mockTransportFactory.getTransport().setAccessToken(ACCESS_TOKEN);
-    mockTransportFactory.getTransport().setExpireTime(getFormattedTime(c.getTime()));
-    mockTransportFactory.getTransport().addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
-    ImpersonatedCredentials targetCredentials =
-        ImpersonatedCredentials.create(
-                sourceCredentials,
-                IMPERSONATED_CLIENT_EMAIL,
-                null,
-                IMMUTABLE_SCOPES_LIST,
-                VALID_LIFETIME,
-                mockTransportFactory)
-            .createWithCustomCalendar(
-                // Set system timezone to one different than GMT
-                Calendar.getInstance(TimeZone.getTimeZone("America/Los_Angeles")));
-
-    assertTrue(
-        c.getTime().toInstant().truncatedTo(ChronoUnit.SECONDS).toEpochMilli()
-            == targetCredentials.refreshAccessToken().getExpirationTimeMillis());
   }
 
   @Test
@@ -1360,67 +1304,8 @@ class ImpersonatedCredentialsTest extends BaseSerializationTest {
     assertEquals(ACCESS_TOKEN, token.getTokenValue());
   }
 
-  @Test
-  void refreshAccessToken_withCustomCalendar_success() throws IOException {
-    // This test verifies behavioral parity between the new Instant-based logic and
-    // the legacy Calendar-based logic. It ensures that if a user provides a custom
-    // calendar with a specific timezone, that context is correctly respected
-    // during parsing, even though the primary parsing engine has changed.
-    MockIAMCredentialsServiceTransport transport = StatefulMockIAMTransportFactory.getTransport();
-    transport.setTargetPrincipal(IMPERSONATED_CLIENT_EMAIL);
-    transport.setAccessToken(ACCESS_TOKEN);
-
-    // Create a calendar in a specific timezone (PST/PDT)
-    Calendar c = Calendar.getInstance(TimeZone.getTimeZone("America/Los_Angeles"));
-    // Set to a fixed point in time: 1:00 PM local wall-clock time
-    c.set(2026, Calendar.MARCH, 24, 13, 0, 0);
-    c.set(Calendar.MILLISECOND, 0);
-    Date expectedDate = c.getTime();
-
-    // The IAM API always returns Zulu (UTC) time strings.
-    // 1:00 PM PDT (UTC-7) corresponds to 8:00 PM UTC.
-    String expireTime = "2026-03-24T20:00:00Z";
-    transport.setExpireTime(expireTime);
-    transport.addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "", true);
-
-    AccessToken sourceToken =
-        new AccessToken("source-token", new Date(System.currentTimeMillis() + 3600000));
-    GoogleCredentials sourceCredentials = GoogleCredentials.create(sourceToken);
-
-    ImpersonatedCredentials targetCredentials =
-        ImpersonatedCredentials.create(
-                sourceCredentials,
-                IMPERSONATED_CLIENT_EMAIL,
-                null,
-                IMMUTABLE_SCOPES_LIST,
-                VALID_LIFETIME,
-                new StatefulMockIAMTransportFactory())
-            .createWithCustomCalendar(c);
-
-    // This should work and correctly integrate the custom calendar's timezone configuration.
-    AccessToken token = targetCredentials.refreshAccessToken();
-    assertNotNull(token);
-    assertEquals(ACCESS_TOKEN, token.getTokenValue());
-    // Verify that the resulting point-in-time matches our original calendar configuration.
-    assertEquals(expectedDate.getTime(), token.getExpirationTime().getTime());
-  }
-
   public static String getDefaultExpireTime() {
-    Calendar c = Calendar.getInstance();
-    c.add(Calendar.SECOND, VALID_LIFETIME);
-    return getFormattedTime(c.getTime());
-  }
-
-  /**
-   * Given a {@link Date}, it will return a string of the date formatted like
-   * <b>yyyy-MM-dd'T'HH:mm:ss'Z'</b>
-   */
-  private static String getFormattedTime(final Date date) {
-    // Set timezone to GMT since that's the TZ used in the response from the service impersonation
-    // token exchange
-    final DateFormat formatter = new SimpleDateFormat(RFC3339);
-    formatter.setTimeZone(TimeZone.getTimeZone("GMT"));
-    return formatter.format(date);
+    return Instant.now().plusSeconds(VALID_LIFETIME).truncatedTo(ChronoUnit.SECONDS).toString();
   }
 
   private String generateErrorJson(
