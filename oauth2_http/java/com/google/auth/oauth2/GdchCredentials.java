@@ -75,8 +75,16 @@ public class GdchCredentials extends GoogleCredentials {
   private static final LoggerProvider LOGGER_PROVIDER =
       LoggerProvider.forClazz(GdchCredentials.class);
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
-  @VisibleForTesting static final String SUPPORTED_FORMAT_VERSION = "1";
 
+  /**
+   * The expected format version for GDCH credential profiles.
+   * Version "1" indicates the initial and currently supported JSON format for these credentials.
+   * See go/gdch-python-auth-lib for more info.
+   */
+  @VisibleForTesting static final String SUPPORTED_JSON_FORMAT_VERSION = "1";
+
+  // Custom URN used by GDCH to identify service account tokens in token exchange requests.
+  // See go/gdch-python-auth-lib for more information.
   private static final String SERVICE_ACCOUNT_TOKEN_TYPE =
       "urn:k8s:params:oauth:token-type:serviceaccount";
 
@@ -198,9 +206,9 @@ public class GdchCredentials extends GoogleCredentials {
         validateField((String) json.get("token_uri"), "token_uri");
     String caCertPath = (String) json.get("ca_cert_path");
 
-    if (!SUPPORTED_FORMAT_VERSION.equals(formatVersion)) {
+    if (!SUPPORTED_JSON_FORMAT_VERSION.equals(formatVersion)) {
       throw new IOException(
-          String.format("Only format version %s is supported.", SUPPORTED_FORMAT_VERSION));
+          String.format("Only format version %s is supported.", SUPPORTED_JSON_FORMAT_VERSION));
     }
 
     URI tokenServerUriFromCreds = null;
@@ -247,10 +255,8 @@ public class GdchCredentials extends GoogleCredentials {
    */
   @ObsoleteApi("Use createWithGdchAudience(String) instead.")
   public GdchCredentials createWithGdchAudience(URI apiAudience) {
-    if (apiAudience == null) {
-      throw new IllegalArgumentException(
-          "Audience cannot be null or empty for GDCH service account credentials.");
-    }
+    Preconditions.checkNotNull(
+        apiAudience, "Audience are not configured for GDCH service account credentials.");
     return this.toBuilder().setGdchAudience(apiAudience.toString()).build();
   }
 
@@ -372,6 +378,9 @@ public class GdchCredentials extends GoogleCredentials {
     return String.format("system:serviceaccount:%s:%s", projectId, serviceIdentityName);
   }
 
+  /**
+   * @return the projectId set in the GDCH SA Key file or the user set projectId
+   */
   @Override
   public final String getProjectId() {
     return projectId;
@@ -571,16 +580,7 @@ public class GdchCredentials extends GoogleCredentials {
       return this;
     }
 
-    @CanIgnoreReturnValue
-    @ObsoleteApi("Use setGdchAudience(String) instead")
-    public Builder setGdchAudience(URI apiAudience) {
-      if (apiAudience == null) {
-        throw new IllegalArgumentException(
-            "Audience cannot be null for GDCH service account credentials.");
-      }
-      this.apiAudience = apiAudience.toString();
-      return this;
-    }
+
 
     public String getProjectId() {
       return projectId;

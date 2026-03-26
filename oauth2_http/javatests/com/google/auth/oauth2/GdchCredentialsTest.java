@@ -67,7 +67,7 @@ import org.junit.jupiter.api.Test;
 
 /** Test case for {@link GdchCredentials}. */
 class GdchCredentialsTest extends BaseSerializationTest {
-  private static final String FORMAT_VERSION = GdchCredentials.SUPPORTED_FORMAT_VERSION;
+  private static final String FORMAT_VERSION = GdchCredentials.SUPPORTED_JSON_FORMAT_VERSION;
   private static final String PRIVATE_KEY_ID = "d84a4fefcf50791d4a90f2d7af17469d6282df9d";
   static final String PRIVATE_KEY_PKCS8 =
       "-----BEGIN PRIVATE KEY-----\n"
@@ -1201,14 +1201,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
             .contains("Audience cannot be null or empty for GDCH service account credentials."));
   }
 
-  @Test
-  void builder_setGdchAudience_nullUri() {
-    GdchCredentials.Builder builder = GdchCredentials.newBuilder();
-    IllegalArgumentException ex =
-        assertThrows(IllegalArgumentException.class, () -> builder.setGdchAudience((URI) null));
-    assertTrue(
-        ex.getMessage().contains("Audience cannot be null for GDCH service account credentials."));
-  }
+
 
   static GenericJson writeGdchServiceAccountJson(
       String formatVersion,
