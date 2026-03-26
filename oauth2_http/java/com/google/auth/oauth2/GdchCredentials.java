@@ -570,6 +570,13 @@ public class GdchCredentials extends GoogleCredentials {
       return this;
     }
 
+    /**
+     * Sets the intended audience for GDCH credentials.
+     *
+     * @param apiAudience The audience string. Cannot be null or empty.
+     * @return this builder.
+     * @throws IllegalArgumentException if the audience is null or empty.
+     */
     @CanIgnoreReturnValue
     public Builder setGdchAudience(String apiAudience) {
       if (Strings.isNullOrEmpty(apiAudience)) {

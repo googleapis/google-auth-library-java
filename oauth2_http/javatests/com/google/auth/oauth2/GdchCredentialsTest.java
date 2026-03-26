@@ -1101,7 +1101,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
 
   @Test
   void transcodeDerToConcat_invalidRInteger() {
-    // Missing INTEGER for R
+    // Uses BIT STRING (0x03) instead of INTEGER (0x02) for R
     byte[] invalidDer = new byte[] {0x30, 0x06, 0x03, 0x01, 0x01, 0x02, 0x01, 0x02};
     GoogleAuthException e =
         assertThrows(
@@ -1111,7 +1111,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
 
   @Test
   void transcodeDerToConcat_invalidSInteger() {
-    // Missing INTEGER for S
+    // Uses BIT STRING (0x03) instead of INTEGER (0x02) for S
     byte[] invalidDer = new byte[] {0x30, 0x06, 0x02, 0x01, 0x01, 0x03, 0x01, 0x01};
     GoogleAuthException e =
         assertThrows(
