@@ -38,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.auth.oauth2.SystemPropertyProvider;
 import com.google.auth.oauth2.TestEnvironmentProvider;
+import com.google.auth.oauth2.TestPropertyProvider;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -136,4 +137,36 @@ class X509ProviderTest {
     assertEquals(1, store.size());
     assertNotNull(store.getCertificateAlias(expectedCert));
   }
+
+  @Test
+  void x509Provider_succeeds_withWindowsPath()
+      throws IOException, KeyStoreException, CertificateException {
+    Path windowsTempDir = Files.createTempDirectory("windowsTempDir");
+    windowsTempDir.toFile().deleteOnExit();
+    Path gcloudDir = windowsTempDir.resolve("gcloud");
+    Files.createDirectory(gcloudDir);
+    Path configPath = gcloudDir.resolve("certificate_config.json");
+
+    // Copy the valid config to this new temp location
+    Files.copy(new File(TEST_CONFIG_PATH).toPath(), configPath);
+
+    TestEnvironmentProvider envProvider = new TestEnvironmentProvider();
+    envProvider.setEnv("APPDATA", windowsTempDir.toString());
+
+    TestPropertyProvider propProvider = new TestPropertyProvider();
+    propProvider.setProperty("os.name", "Windows 10");
+
+    X509Provider testProvider = new X509Provider(envProvider, propProvider, null);
+
+    CertificateFactory cf = CertificateFactory.getInstance("X.509");
+    Certificate expectedCert;
+    try (FileInputStream fis = new FileInputStream(new File(TEST_CERT_PATH))) {
+      expectedCert = cf.generateCertificate(fis);
+    }
+
+    KeyStore store = testProvider.getKeyStore();
+    assertEquals(1, store.size());
+    assertNotNull(store.getCertificateAlias(expectedCert));
+  }
 }
+
