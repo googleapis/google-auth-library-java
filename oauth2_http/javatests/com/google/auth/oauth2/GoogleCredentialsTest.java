@@ -379,7 +379,8 @@ class GoogleCredentialsTest extends BaseSerializationTest {
 
     testFromStreamException(
         gdchServiceAccountStream,
-        String.format("Only format version %s is supported", GdchCredentials.SUPPORTED_JSON_FORMAT_VERSION));
+        String.format(
+            "Only format version %s is supported", GdchCredentials.SUPPORTED_JSON_FORMAT_VERSION));
   }
 
   @Test
