@@ -106,16 +106,15 @@ public class IdTokenCredentials extends OAuth2Credentials {
   private static final long serialVersionUID = -2133257318957588431L;
 
   private final IdTokenProvider idTokenProvider;
-  private final String targetAudience;
   private final List<IdTokenProvider.Option> options;
+  private String targetAudience;
 
   private IdTokenCredentials(Builder builder) {
     this.idTokenProvider = Preconditions.checkNotNull(builder.getIdTokenProvider());
 
+    // target audience can't be used for UserCredentials
     if (!(this.idTokenProvider instanceof UserCredentials)) {
       this.targetAudience = Preconditions.checkNotNull(builder.getTargetAudience());
-    } else {
-      this.targetAudience = null;
     }
 
     this.options = builder.getOptions();
@@ -190,10 +189,8 @@ public class IdTokenCredentials extends OAuth2Credentials {
     /**
      * Sets the target audience for the ID token.
      *
-     * @param targetAudience the target audience, cannot be null for non-UserCredentials. See
-     *     class-level Javadoc for the list of supported types (e.g., ServiceAccountCredentials,
-     *     ComputeEngineCredentials, ImpersonatedCredentials). Should not be set for UserCredentials
-     *     as it will be ignored.
+     * @param targetAudience the target audience, cannot be null for non-UserCredentials. If set for
+     *     UserCredentials, the value will be ignored.
      * @return the builder object
      */
     @CanIgnoreReturnValue
