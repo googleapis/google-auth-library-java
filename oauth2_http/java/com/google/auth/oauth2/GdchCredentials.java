@@ -77,9 +77,9 @@ public class GdchCredentials extends GoogleCredentials {
   private static final String PARSE_ERROR_PREFIX = "Error parsing token refresh response. ";
 
   /**
-   * The expected format version for GDCH credential profiles.
-   * Version "1" indicates the initial and currently supported JSON format for these credentials.
-   * See go/gdch-python-auth-lib for more info.
+   * The expected format version for GDCH credential profiles. Version "1" indicates the initial and
+   * currently supported JSON format for these credentials. See go/gdch-python-auth-lib for more
+   * info.
    */
   @VisibleForTesting static final String SUPPORTED_JSON_FORMAT_VERSION = "1";
 
@@ -579,8 +579,6 @@ public class GdchCredentials extends GoogleCredentials {
       this.apiAudience = apiAudience;
       return this;
     }
-
-
 
     public String getProjectId() {
       return projectId;

@@ -1201,8 +1201,6 @@ class GdchCredentialsTest extends BaseSerializationTest {
             .contains("Audience cannot be null or empty for GDCH service account credentials."));
   }
 
-
-
   static GenericJson writeGdchServiceAccountJson(
       String formatVersion,
       String project,
