@@ -169,4 +169,3 @@ class X509ProviderTest {
     assertNotNull(store.getCertificateAlias(expectedCert));
   }
 }
-
