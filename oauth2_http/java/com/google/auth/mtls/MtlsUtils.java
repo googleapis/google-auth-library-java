@@ -30,6 +30,7 @@
 
 package com.google.auth.mtls;
 
+import com.google.api.core.InternalApi;
 import com.google.auth.oauth2.EnvironmentProvider;
 import com.google.auth.oauth2.PropertyProvider;
 import com.google.common.base.Strings;
@@ -44,7 +45,8 @@ import java.util.Locale;
  *
  * <p>For internal use only.
  */
-class MtlsUtils {
+@InternalApi
+public class MtlsUtils {
   static final String CERTIFICATE_CONFIGURATION_ENV_VARIABLE = "GOOGLE_API_CERTIFICATE_CONFIG";
   static final String WELL_KNOWN_CERTIFICATE_CONFIG_FILE = "certificate_config.json";
   static final String CLOUDSDK_CONFIG_DIRECTORY = "gcloud";
@@ -60,7 +62,7 @@ class MtlsUtils {
    * @return The path to the certificate file.
    * @throws IOException if the certificate configuration cannot be found or loaded.
    */
-  static String getCertificatePath(
+  public static String getCertificatePath(
       EnvironmentProvider envProvider, PropertyProvider propProvider, String certConfigPathOverride)
       throws IOException {
     String certPath =
@@ -103,7 +105,9 @@ class MtlsUtils {
     }
 
     if (!certConfig.isFile()) {
-      throw new CertificateSourceUnavailableException("File does not exist.");
+      throw new CertificateSourceUnavailableException(
+          "Certificate configuration file does not exist or is not a file: "
+              + certConfig.getAbsolutePath());
     }
     try (InputStream certConfigStream = new FileInputStream(certConfig)) {
       return WorkloadCertificateConfiguration.fromCertificateConfigurationStream(certConfigStream);

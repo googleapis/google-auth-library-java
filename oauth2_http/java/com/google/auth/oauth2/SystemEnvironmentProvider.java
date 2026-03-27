@@ -1,5 +1,6 @@
 package com.google.auth.oauth2;
 
+import com.google.api.core.InternalApi;
 import java.io.Serializable;
 
 /**
@@ -7,6 +8,7 @@ import java.io.Serializable;
  *
  * <p>For internal use only.
  */
+@InternalApi
 public class SystemEnvironmentProvider implements EnvironmentProvider, Serializable {
   static final SystemEnvironmentProvider INSTANCE = new SystemEnvironmentProvider();
   private static final long serialVersionUID = -4698164985883575244L;

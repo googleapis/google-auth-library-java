@@ -60,11 +60,12 @@ class X509ProviderTest {
   void x509Provider_fileDoesntExist_throws() {
     String certConfigPath = "badfile.txt";
     X509Provider testProvider = new X509Provider(certConfigPath);
-    String expectedErrorMessage = "File does not exist.";
-
+    String expectedErrorMessage =
+        "Certificate configuration file does not exist or is not a file: "
+            + new File(certConfigPath).getAbsolutePath();
     CertificateSourceUnavailableException exception =
         assertThrows(CertificateSourceUnavailableException.class, testProvider::getKeyStore);
-    assertTrue(exception.getMessage().contains(expectedErrorMessage));
+    assertEquals(expectedErrorMessage, exception.getMessage());
   }
 
   @Test

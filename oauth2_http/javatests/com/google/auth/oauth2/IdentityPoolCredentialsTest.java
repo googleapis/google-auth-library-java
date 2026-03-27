@@ -1094,7 +1094,6 @@ class IdentityPoolCredentialsTest extends BaseSerializationTest {
 
     // Verify the custom provider methods were called during build.
     verify(x509Provider).getKeyStore();
-    verify(x509Provider).getCertificatePath();
   }
 
   @Test
@@ -1156,15 +1155,17 @@ class IdentityPoolCredentialsTest extends BaseSerializationTest {
   @Test
   void build_withCustomProvider_throwsOnGetCertificatePath()
       throws IOException, KeyStoreException, CertificateException, NoSuchAlgorithmException {
-    // Simulate a scenario where the X509Provider cannot access or read the certificate
-    // configuration file needed to determine the certificate path, resulting in an IOException.
+    // Simulate a scenario where path resolution fails during build with a custom
+    // provider.
+    // We achieve this by passing a non-existent configuration path which causes
+    // MtlsUtils to throw
+    // IOException.
     KeyStore keyStore = KeyStore.getInstance("JKS");
     keyStore.load(null, null);
     TestX509Provider x509Provider = new TestX509Provider(keyStore, "/path/to/certificate.json");
-    x509Provider.setShouldThrowOnGetCertificatePath(true); // Configure to throw
 
     Map<String, Object> certificateMap = new HashMap<>();
-    certificateMap.put("certificate_config_location", "/path/to/certificate.json");
+    certificateMap.put("certificate_config_location", "/non/existent/path.json");
 
     // Expect RuntimeException because the constructor wraps the IOException.
     RuntimeException exception =
@@ -1172,10 +1173,9 @@ class IdentityPoolCredentialsTest extends BaseSerializationTest {
             RuntimeException.class,
             () -> createCredentialsWithCertificate(x509Provider, certificateMap));
 
-    // Verify the cause is the expected IOException from the mock.
+    // Verify the cause is the expected IOException (or subclass) from MtlsUtils.
     assertNotNull(exception.getCause());
     assertTrue(exception.getCause() instanceof IOException);
-    assertEquals("Simulated IOException on certificate path", exception.getCause().getMessage());
 
     // Verify the wrapper exception message
     assertEquals(
@@ -1284,7 +1284,6 @@ class IdentityPoolCredentialsTest extends BaseSerializationTest {
     private final KeyStore keyStore;
     private final String certificatePath;
     private boolean shouldThrowOnGetKeyStore = false;
-    private boolean shouldThrowOnGetCertificatePath = false;
 
     TestX509Provider(KeyStore keyStore, String certificatePath) {
       super();
@@ -1300,20 +1299,8 @@ class IdentityPoolCredentialsTest extends BaseSerializationTest {
       return keyStore;
     }
 
-    @Override
-    public String getCertificatePath() throws IOException {
-      if (shouldThrowOnGetCertificatePath) {
-        throw new IOException("Simulated IOException on certificate path");
-      }
-      return certificatePath;
-    }
-
     void setShouldThrowOnGetKeyStore(boolean shouldThrow) {
       this.shouldThrowOnGetKeyStore = shouldThrow;
-    }
-
-    void setShouldThrowOnGetCertificatePath(boolean shouldThrow) {
-      this.shouldThrowOnGetCertificatePath = shouldThrow;
     }
   }
 }

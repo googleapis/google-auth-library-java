@@ -96,21 +96,6 @@ public class X509Provider implements MtlsProvider {
   }
 
   /**
-   * Returns the path to the client certificate file specified by the loaded workload certificate
-   * configuration.
-   *
-   * <p>If the configuration has not been loaded yet, this method will attempt to load it first by
-   * searching the override path, environment variable, and well-known locations.
-   *
-   * @return The path to the certificate file.
-   * @throws IOException if the certificate configuration cannot be found or loaded, or if the
-   *     configuration file does not specify a certificate path.
-   */
-  public String getCertificatePath() throws IOException {
-    return MtlsUtils.getCertificatePath(envProvider, propProvider, certConfigPathOverride);
-  }
-
-  /**
    * Finds the certificate configuration file, then builds a Keystore using the X.509 certificate
    * and private key pointed to by the configuration. This will check the following locations in
    * order.
