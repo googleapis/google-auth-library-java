@@ -64,6 +64,7 @@ public class X509Provider implements MtlsProvider {
    * @param propProvider property provider used for system properties
    * @param certConfigPathOverride the path to read the certificate configuration from.
    */
+  @InternalApi
   public X509Provider(
       EnvironmentProvider envProvider,
       PropertyProvider propProvider,
