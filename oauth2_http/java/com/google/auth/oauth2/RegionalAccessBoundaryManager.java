@@ -121,13 +121,11 @@ final class RegionalAccessBoundaryManager {
    * @param transportFactory The HTTP transport factory to use for the lookup.
    * @param provider The provider used to retrieve the lookup endpoint URL.
    * @param accessToken The access token for authentication.
-   * @param executor The executor to use for the background task. If null, a new thread is created.
    */
   void triggerAsyncRefresh(
       final HttpTransportFactory transportFactory,
       final RegionalAccessBoundaryProvider provider,
-      final AccessToken accessToken,
-      @Nullable final java.util.concurrent.Executor executor) {
+      final AccessToken accessToken) {
     if (isCooldownActive()) {
       return;
     }
@@ -163,18 +161,14 @@ final class RegionalAccessBoundaryManager {
           };
 
       try {
-        if (executor != null) {
-          executor.execute(refreshTask);
-        } else {
-          // We use new Thread() here instead of
-          // CompletableFuture.runAsync() (which uses ForkJoinPool.commonPool()).
-          // This avoids consuming CPU resources since
-          // The common pool has a small, fixed number of threads designed for
-          // CPU-bound tasks.
-          Thread refreshThread = new Thread(refreshTask, "RAB-refresh-thread");
-          refreshThread.setDaemon(true);
-          refreshThread.start();
-        }
+        // We use new Thread() here instead of
+        // CompletableFuture.runAsync() (which uses ForkJoinPool.commonPool()).
+        // This avoids consuming CPU resources since
+        // The common pool has a small, fixed number of threads designed for
+        // CPU-bound tasks.
+        Thread refreshThread = new Thread(refreshTask, "RAB-refresh-thread");
+        refreshThread.setDaemon(true);
+        refreshThread.start();
       } catch (Exception | Error e) {
         // If scheduling fails (e.g., RejectedExecutionException, OutOfMemoryError for threads),
         // the task's finally block will never execute. We must release the lock here.

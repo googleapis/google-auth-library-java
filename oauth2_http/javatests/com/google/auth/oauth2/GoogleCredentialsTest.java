@@ -1247,10 +1247,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
 
           @Override
           void refreshRegionalAccessBoundaryIfExpired(
-              @Nullable URI uri,
-              @Nullable AccessToken token,
-              @Nullable java.util.concurrent.Executor executor)
-              throws IOException {
+              @Nullable URI uri, @Nullable AccessToken token) throws IOException {
             throw new IOException("Simulated RAB failure");
           }
         };
@@ -1272,10 +1269,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
 
           @Override
           void refreshRegionalAccessBoundaryIfExpired(
-              @Nullable URI uri,
-              @Nullable AccessToken token,
-              @Nullable java.util.concurrent.Executor executor)
-              throws IOException {
+              @Nullable URI uri, @Nullable AccessToken token) throws IOException {
             throw new IOException("Simulated RAB failure");
           }
         };

@@ -353,13 +353,9 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    *
    * @param uri The URI of the outbound request.
    * @param token The access token to use for the refresh.
-   * @param executor The executor to use for the background task. If null, a new thread is created.
    * @throws IOException If getting the universe domain fails.
    */
-  void refreshRegionalAccessBoundaryIfExpired(
-      @Nullable URI uri,
-      @Nullable AccessToken token,
-      @Nullable java.util.concurrent.Executor executor)
+  void refreshRegionalAccessBoundaryIfExpired(@Nullable URI uri, @Nullable AccessToken token)
       throws IOException {
     if (!(this instanceof RegionalAccessBoundaryProvider)
         || !RegionalAccessBoundary.isEnabled()
@@ -388,7 +384,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     }
 
     regionalAccessBoundaryManager.triggerAsyncRefresh(
-        transportFactory, (RegionalAccessBoundaryProvider) this, token, executor);
+        transportFactory, (RegionalAccessBoundaryProvider) this, token);
   }
 
   /**
@@ -397,12 +393,9 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
    *
    * @param uri The URI of the outbound request.
    * @param requestMetadata The request metadata containing the authorization header.
-   * @param executor The executor to use for the background task.
    */
   void refreshRegionalAccessBoundaryWithSelfSignedJwtIfExpired(
-      @Nullable URI uri,
-      Map<String, List<String>> requestMetadata,
-      @Nullable java.util.concurrent.Executor executor) {
+      @Nullable URI uri, Map<String, List<String>> requestMetadata) {
     List<String> authHeaders = requestMetadata.get(AuthHttpConstants.AUTHORIZATION);
     if (authHeaders != null && !authHeaders.isEmpty()) {
       String authHeader = authHeaders.get(0);
@@ -411,7 +404,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
         // Use a null expiration as JWTs are short-lived anyway.
         AccessToken wrappedToken = new AccessToken(tokenValue, null);
         try {
-          refreshRegionalAccessBoundaryIfExpired(uri, wrappedToken, executor);
+          refreshRegionalAccessBoundaryIfExpired(uri, wrappedToken);
         } catch (IOException e) {
           // Ignore failure in async refresh trigger.
         }
@@ -436,7 +429,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
     metadata = addRegionalAccessBoundaryToRequestMetadata(uri, metadata);
     try {
       // Sets off an async refresh for request-metadata.
-      refreshRegionalAccessBoundaryIfExpired(uri, getAccessToken(), null);
+      refreshRegionalAccessBoundaryIfExpired(uri, getAccessToken());
     } catch (IOException e) {
       // Ignore failure in async refresh trigger.
     }
@@ -466,7 +459,7 @@ public class GoogleCredentials extends OAuth2Credentials implements QuotaProject
           public void onSuccess(Map<String, List<String>> metadata) {
             metadata = addRegionalAccessBoundaryToRequestMetadata(uri, metadata);
             try {
-              refreshRegionalAccessBoundaryIfExpired(uri, getAccessToken(), executor);
+              refreshRegionalAccessBoundaryIfExpired(uri, getAccessToken());
             } catch (IOException e) {
               // Ignore failure in async refresh trigger.
             }

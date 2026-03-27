@@ -153,7 +153,7 @@ public class RegionalAccessBoundaryTest {
     RegionalAccessBoundaryManager manager = new RegionalAccessBoundaryManager(testClock);
 
     // 1. Let's first get a RAB into the cache
-    manager.triggerAsyncRefresh(transportFactory, provider, token, null);
+    manager.triggerAsyncRefresh(transportFactory, provider, token);
 
     // Wait for it to be cached
     int retries = 0;
@@ -184,7 +184,7 @@ public class RegionalAccessBoundaryTest {
     HttpTransportFactory transportFactory2 = () -> transport2;
 
     // 4. Trigger refresh - should start because we are in grace period
-    manager.triggerAsyncRefresh(transportFactory2, provider, token, null);
+    manager.triggerAsyncRefresh(transportFactory2, provider, token);
 
     // 5. Wait for background refresh to complete
     // We expect the cached RAB to eventually change to newerEncoded
@@ -203,46 +203,6 @@ public class RegionalAccessBoundaryTest {
         "Refresh should have completed and updated the cache within 5 seconds",
         resultRab != null && newerEncoded.equals(resultRab.getEncodedLocations()));
     assertEquals(newerEncoded, resultRab.getEncodedLocations());
-  }
-
-  @Test
-  public void testManagerReleasesLockOnSchedulingFailure() {
-    RegionalAccessBoundaryManager manager = new RegionalAccessBoundaryManager(testClock);
-    HttpTransportFactory transportFactory = () -> new MockHttpTransport();
-    RegionalAccessBoundaryProvider provider = () -> "https://dummy";
-    AccessToken token =
-        new AccessToken("token", new java.util.Date(System.currentTimeMillis() + 10 * 3600000L));
-
-    java.util.concurrent.Executor rejectingExecutor =
-        new java.util.concurrent.Executor() {
-          @Override
-          public void execute(Runnable command) {
-            throw new java.util.concurrent.RejectedExecutionException("Simulated rejection");
-          }
-        };
-
-    manager.triggerAsyncRefresh(transportFactory, provider, token, rejectingExecutor);
-
-    // After rejection, the lock should be released, but it should be in cooldown.
-    assertTrue(manager.isCooldownActive());
-
-    // Advance the clock to bypass cooldown
-    testClock.set(
-        testClock.currentTimeMillis() + RegionalAccessBoundaryManager.MAX_COOLDOWN_MILLIS + 1000);
-    assertFalse(manager.isCooldownActive());
-
-    // Schedule again with a valid executor to prove the lock was released.
-    java.util.concurrent.atomic.AtomicBoolean taskRan =
-        new java.util.concurrent.atomic.AtomicBoolean(false);
-    java.util.concurrent.Executor workingExecutor =
-        new java.util.concurrent.Executor() {
-          @Override
-          public void execute(Runnable command) {
-            taskRan.set(true);
-          }
-        };
-    manager.triggerAsyncRefresh(transportFactory, provider, token, workingExecutor);
-    assertTrue(taskRan.get());
   }
 
   private static class TestClock implements Clock {
