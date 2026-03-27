@@ -40,8 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.GenericJson;
@@ -1053,14 +1052,8 @@ class IdentityPoolCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void build_withCertificateSourceAndCustomX509Provider_success()
+  void build_withDefaultCertificateConfig_success()
       throws IOException, KeyStoreException, CertificateException, NoSuchAlgorithmException {
-    // Create an empty KeyStore and a spy on a custom X509Provider.
-    KeyStore keyStore = KeyStore.getInstance("JKS");
-    keyStore.load(null, null);
-    TestX509Provider x509Provider =
-        spy(new TestX509Provider(keyStore, "/path/to/certificate.json"));
-
     // Set up credential source for certificate type.
     Map<String, Object> certificateMap = new HashMap<>();
     certificateMap.put("use_default_certificate_config", true);
@@ -1071,11 +1064,18 @@ class IdentityPoolCredentialsTest extends BaseSerializationTest {
     MockExternalAccountCredentialsTransportFactory mockTransportFactory =
         new MockExternalAccountCredentialsTransportFactory();
 
-    // Build credentials with the custom provider.
+    // Use the pre-existing test configuration file to bypass well-known path resolution.
+    EnvironmentProvider mockEnvProvider =
+        name ->
+            "GOOGLE_API_CERTIFICATE_CONFIG".equals(name)
+                ? new File("testresources/mtls/certificate_config.json").getAbsolutePath()
+                : null;
+
+    // Build credentials using the default provider (no setX509Provider).
     IdentityPoolCredentials credentials =
         IdentityPoolCredentials.newBuilder()
-            .setX509Provider(x509Provider)
             .setHttpTransportFactory(mockTransportFactory)
+            .setEnvironmentProvider(mockEnvProvider)
             .setAudience("test-audience")
             .setSubjectTokenType("test-token-type")
             .setCredentialSource(credentialSource)
@@ -1091,9 +1091,6 @@ class IdentityPoolCredentialsTest extends BaseSerializationTest {
         IdentityPoolCredentials.CERTIFICATE_METRICS_HEADER_VALUE,
         credentials.getCredentialSourceType(),
         "Metrics header should indicate certificate source");
-
-    // Verify the custom provider methods were called during build.
-    verify(x509Provider).getKeyStore();
   }
 
   @Test
