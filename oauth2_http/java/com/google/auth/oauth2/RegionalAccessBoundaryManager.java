@@ -172,10 +172,10 @@ final class RegionalAccessBoundaryManager {
       } catch (Exception | Error e) {
         // If scheduling fails (e.g., RejectedExecutionException, OutOfMemoryError for threads),
         // the task's finally block will never execute. We must release the lock here.
-        refreshFuture.set(null);
-        future.setException(e);
         handleRefreshFailure(
             new Exception("Regional Access Boundary background refresh failed to schedule", e));
+        future.setException(e);
+        refreshFuture.set(null);
       }
     }
   }
@@ -203,7 +203,7 @@ final class RegionalAccessBoundaryManager {
     if (cooldownState.compareAndSet(currentCooldownState, next)) {
       LoggingUtils.log(
           LOGGER_PROVIDER,
-          Level.INFO,
+          Level.FINE,
           null,
           "Regional Access Boundary lookup failed; entering cooldown for "
               + (next.durationMillis / 60000)

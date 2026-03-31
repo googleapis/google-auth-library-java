@@ -62,9 +62,9 @@ import javax.annotation.Nullable;
  * infrastructure to enforce regional security restrictions. This class does not perform any
  * client-side validation or enforcement.
  */
-public final class RegionalAccessBoundary implements Serializable {
+final class RegionalAccessBoundary implements Serializable {
 
-  public static final String X_ALLOWED_LOCATIONS_HEADER_KEY = "x-allowed-locations";
+  static final String X_ALLOWED_LOCATIONS_HEADER_KEY = "x-allowed-locations";
   private static final long serialVersionUID = -2428522338274020302L;
 
   // Note: this is for internal testing use use only.
