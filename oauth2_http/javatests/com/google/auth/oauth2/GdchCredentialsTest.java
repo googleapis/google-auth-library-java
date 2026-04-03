@@ -75,6 +75,15 @@ class GdchCredentialsTest extends BaseSerializationTest {
           + "OaMY7TNXZois4NH0bkMwqTAnVbqhRANCAASk5+U9skHVTo+sEVd2/yKY7A2eYn8K\n"
           + "Cygd3bQalfWs533aTu93XwVx0YNN310aFquv3/VIiFofm1JEBAhUiG8e\n"
           + "-----END PRIVATE KEY-----";
+
+  // Generated using OpenSSL:
+  // openssl ecparam -name prime256v1 -genkey -noout -out ec-sec1.pem
+  static final String PRIVATE_KEY_SEC1 =
+      "-----BEGIN EC PRIVATE KEY-----\n"
+          + "MHcCAQEEIK+G0KyJyJPDK/tyYsF0RyFW+X1GMsWbrlWn8TbLAI0doAoGCCqGSM49\n"
+          + "AwEHoUQDQgAEmGMJNcYyb9IfS4ngfvSf+c0sxOdcRfPNnZajry4bLgs++2VpQn8e\n"
+          + "l27zuFvF8jrM2/XyG5y9heE8YSjfLMy0Rw==\n"
+          + "-----END EC PRIVATE KEY-----";
   private static final String PROJECT_ID = "project-id";
   private static final String SERVICE_IDENTITY_NAME = "service-identity-name";
   private static final String ACCESS_TOKEN = "1/MkSJoj1xsli0AccessToken_NKPY2";
@@ -99,6 +108,23 @@ class GdchCredentialsTest extends BaseSerializationTest {
             TOKEN_SERVER_URI);
     GdchCredentials credentials = GdchCredentials.fromJson(json);
 
+    assertEquals(PROJECT_ID, credentials.getProjectId());
+  }
+
+  @Test
+  void fromJSON_sec1Key() throws IOException {
+    GenericJson json =
+        writeGdchServiceAccountJson(
+            FORMAT_VERSION,
+            PROJECT_ID,
+            PRIVATE_KEY_ID,
+            PRIVATE_KEY_SEC1,
+            SERVICE_IDENTITY_NAME,
+            CA_CERT_PATH,
+            TOKEN_SERVER_URI);
+    GdchCredentials credentials = GdchCredentials.fromJson(json);
+
+    assertNotNull(credentials);
     assertEquals(PROJECT_ID, credentials.getProjectId());
   }
 
