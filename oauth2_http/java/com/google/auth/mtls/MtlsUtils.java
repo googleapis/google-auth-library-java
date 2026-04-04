@@ -115,7 +115,7 @@ public class MtlsUtils {
   }
 
   private static File getWellKnownCertificateConfigFile(
-      EnvironmentProvider envProvider, PropertyProvider propProvider) {
+      EnvironmentProvider envProvider, PropertyProvider propProvider) throws IOException {
     File cloudConfigPath;
     String envPath = envProvider.getEnv("CLOUDSDK_CONFIG");
     if (envPath != null) {
@@ -123,7 +123,12 @@ public class MtlsUtils {
     } else {
       String osName = propProvider.getProperty("os.name", "").toLowerCase(Locale.US);
       if (osName.indexOf("windows") >= 0) {
-        File appDataPath = new File(envProvider.getEnv("APPDATA"));
+        String appData = envProvider.getEnv("APPDATA");
+        if (Strings.isNullOrEmpty(appData)) {
+          throw new CertificateSourceUnavailableException(
+              "APPDATA environment variable is not set on Windows.");
+        }
+        File appDataPath = new File(appData);
         cloudConfigPath = new File(appDataPath, CLOUDSDK_CONFIG_DIRECTORY);
       } else {
         File configPath = new File(propProvider.getProperty("user.home", ""), ".config");

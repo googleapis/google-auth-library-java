@@ -169,4 +169,43 @@ class X509ProviderTest {
     assertEquals(1, store.size());
     assertNotNull(store.getCertificateAlias(expectedCert));
   }
+
+  @Test
+  void x509Provider_certFileDoesntExist_throws() throws IOException {
+    Path tempConfig = Files.createTempFile("config", ".json");
+    tempConfig.toFile().deleteOnExit();
+    Path nonExistentCert = tempConfig.getParent().resolve("non_existent_cert.pem");
+
+    Files.write(
+        tempConfig,
+        ("{\"cert_configs\":{\"workload\":{\"cert_path\":\""
+                + nonExistentCert.toString()
+                + "\",\"key_path\":\"key.pem\"}}}")
+            .getBytes());
+
+    X509Provider testProvider = new X509Provider(tempConfig.toString());
+
+    assertThrows(IOException.class, testProvider::getKeyStore);
+  }
+
+  @Test
+  void x509Provider_malformedCert_throws() throws IOException {
+    Path tempConfig = Files.createTempFile("config", ".json");
+    tempConfig.toFile().deleteOnExit();
+    Path malformedCert = Files.createTempFile("badcert", ".pem");
+    malformedCert.toFile().deleteOnExit();
+
+    Files.write(malformedCert, "This is not a valid certificate".getBytes());
+
+    Files.write(
+        tempConfig,
+        ("{\"cert_configs\":{\"workload\":{\"cert_path\":\""
+                + malformedCert.toString()
+                + "\",\"key_path\":\"key.pem\"}}}")
+            .getBytes());
+
+    X509Provider testProvider = new X509Provider(tempConfig.toString());
+
+    assertThrows(Exception.class, testProvider::getKeyStore);
+  }
 }

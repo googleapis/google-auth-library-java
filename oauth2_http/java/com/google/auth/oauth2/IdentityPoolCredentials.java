@@ -176,9 +176,6 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
 
   private X509Provider getX509Provider(
       Builder builder, IdentityPoolCredentialSource credentialSource) {
-    final IdentityPoolCredentialSource.CertificateConfig certConfig =
-        credentialSource.getCertificateConfig();
-
     // Use the provided X509Provider if available, otherwise initialize a default one.
     X509Provider x509Provider = builder.x509Provider;
     if (x509Provider == null) {
@@ -193,6 +190,9 @@ public class IdentityPoolCredentials extends ExternalAccountCredentials {
   private static String getExplicitCertConfigPath(IdentityPoolCredentialSource credentialSource) {
     IdentityPoolCredentialSource.CertificateConfig certConfig =
         credentialSource.getCertificateConfig();
+    if (certConfig == null) {
+      return null;
+    }
     return certConfig.useDefaultCertificateConfig()
         ? null
         : certConfig.getCertificateConfigLocation();
