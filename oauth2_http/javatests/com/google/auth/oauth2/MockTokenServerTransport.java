@@ -77,10 +77,20 @@ public class MockTokenServerTransport extends MockHttpTransport {
   private MockLowLevelHttpRequest request;
   private ClientAuthenticationType clientAuthenticationType;
   private PKCEProvider pkceProvider;
-  private TrustBoundary trustBoundary;
+  private RegionalAccessBoundary regionalAccessBoundary;
+  private int regionalAccessBoundaryRequestCount = 0;
+  private int responseDelayMillis = 0;
 
-  public void setTrustBoundary(TrustBoundary trustBoundary) {
-    this.trustBoundary = trustBoundary;
+  public void setRegionalAccessBoundary(RegionalAccessBoundary regionalAccessBoundary) {
+    this.regionalAccessBoundary = regionalAccessBoundary;
+  }
+
+  public int getRegionalAccessBoundaryRequestCount() {
+    return regionalAccessBoundaryRequestCount;
+  }
+
+  public void setResponseDelayMillis(int responseDelayMillis) {
+    this.responseDelayMillis = responseDelayMillis;
   }
 
   public MockTokenServerTransport() {}
@@ -179,6 +189,40 @@ public class MockTokenServerTransport extends MockHttpTransport {
     int questionMarkPos = url.indexOf('?');
     final String urlWithoutQuery = (questionMarkPos > 0) ? url.substring(0, questionMarkPos) : url;
     final String query = (questionMarkPos > 0) ? url.substring(questionMarkPos + 1) : "";
+
+    if (urlWithoutQuery.endsWith("/allowedLocations")) {
+      // Mocking call to the /allowedLocations endpoint for regional access boundary refresh.
+      // For testing convenience, this mock transport handles
+      // the /allowedLocations endpoint. The actual server for this endpoint
+      // will be the IAM Credentials API.
+      request =
+          new MockLowLevelHttpRequest(url) {
+            @Override
+            public LowLevelHttpResponse execute() throws IOException {
+              regionalAccessBoundaryRequestCount++;
+              if (responseDelayMillis > 0) {
+                try {
+                  Thread.sleep(responseDelayMillis);
+                } catch (InterruptedException e) {
+                  Thread.currentThread().interrupt();
+                }
+              }
+              RegionalAccessBoundary rab = regionalAccessBoundary;
+              if (rab == null) {
+                return new MockLowLevelHttpResponse().setStatusCode(404);
+              }
+              GenericJson responseJson = new GenericJson();
+              responseJson.setFactory(JSON_FACTORY);
+              responseJson.put("encodedLocations", rab.getEncodedLocations());
+              responseJson.put("locations", rab.getLocations());
+              String content = responseJson.toPrettyString();
+              return new MockLowLevelHttpResponse()
+                  .setContentType(Json.MEDIA_TYPE)
+                  .setContent(content);
+            }
+          };
+      return request;
+    }
 
     if (!responseSequence.isEmpty()) {
       request =
@@ -323,29 +367,6 @@ public class MockTokenServerTransport extends MockHttpTransport {
               return new MockLowLevelHttpResponse()
                   .setContentType(Json.MEDIA_TYPE)
                   .setContent(refreshText);
-            }
-          };
-      return request;
-    } else if (urlWithoutQuery.endsWith("/allowedLocations")) {
-      // Mocking call to the /allowedLocations endpoint for trust boundary refresh.
-      // For testing convenience, this mock transport handles
-      // the /allowedLocations endpoint. The actual server for this endpoint
-      // will be the IAM Credentials API.
-      request =
-          new MockLowLevelHttpRequest(url) {
-            @Override
-            public LowLevelHttpResponse execute() throws IOException {
-              if (trustBoundary == null) {
-                return new MockLowLevelHttpResponse().setStatusCode(404);
-              }
-              GenericJson responseJson = new GenericJson();
-              responseJson.setFactory(JSON_FACTORY);
-              responseJson.put("encodedLocations", trustBoundary.getEncodedLocations());
-              responseJson.put("locations", trustBoundary.getLocations());
-              String content = responseJson.toPrettyString();
-              return new MockLowLevelHttpResponse()
-                  .setContentType(Json.MEDIA_TYPE)
-                  .setContent(content);
             }
           };
       return request;

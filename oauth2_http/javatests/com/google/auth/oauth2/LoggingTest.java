@@ -64,6 +64,8 @@ import java.util.List;
 import java.util.Map;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.KeyValuePair;
@@ -73,6 +75,7 @@ import org.slf4j.event.KeyValuePair;
  * credentials test classes with addition of test logging appender setup and test logic for logging.
  * This duplicates tests setups, but centralizes logging test setup in this class.
  */
+@RunWith(JUnit4.class)
 public class LoggingTest {
 
   private TestAppender setupTestLogger(Class<?> clazz) {
@@ -91,6 +94,14 @@ public class LoggingTest {
     LoggingUtils.setEnvironmentProvider(testEnvironmentProvider);
   }
 
+  @org.junit.Before
+  public void setUp() {}
+
+  @org.junit.After
+  public void tearDown() {
+    RegionalAccessBoundary.setEnvironmentProviderForTest(null);
+  }
+
   @Test
   public void userCredentials_getRequestMetadata_fromRefreshToken_hasAccessToken()
       throws IOException {
@@ -98,6 +109,7 @@ public class LoggingTest {
     MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
     transportFactory.transport.addClient(CLIENT_ID, CLIENT_SECRET);
     transportFactory.transport.addRefreshToken(REFRESH_TOKEN, ACCESS_TOKEN);
+
     UserCredentials userCredentials =
         UserCredentials.newBuilder()
             .setClientId(CLIENT_ID)
@@ -210,6 +222,7 @@ public class LoggingTest {
     transportFactory.getTransport().setTargetPrincipal(CLIENT_EMAIL);
     transportFactory.getTransport().setIdToken(DEFAULT_ID_TOKEN);
     transportFactory.getTransport().addStatusCodeAndMessage(HttpStatusCodes.STATUS_CODE_OK, "");
+
     ServiceAccountCredentials credentials =
         createDefaultBuilder()
             .setScopes(SCOPES)

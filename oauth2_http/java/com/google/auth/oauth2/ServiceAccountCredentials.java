@@ -90,7 +90,7 @@ import java.util.concurrent.Executor;
  * <p>By default uses a JSON Web Token (JWT) to fetch access tokens.
  */
 public class ServiceAccountCredentials extends GoogleCredentials
-    implements ServiceAccountSigner, IdTokenProvider, JwtProvider, TrustBoundaryProvider {
+    implements ServiceAccountSigner, IdTokenProvider, JwtProvider, RegionalAccessBoundaryProvider {
 
   private static final long serialVersionUID = 7807543542681217978L;
   private static final String GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
@@ -581,11 +581,7 @@ public class ServiceAccountCredentials extends GoogleCredentials
     int expiresInSeconds =
         OAuth2Utils.validateInt32(responseData, "expires_in", PARSE_ERROR_PREFIX);
     long expiresAtMilliseconds = clock.currentTimeMillis() + expiresInSeconds * 1000L;
-    AccessToken newAccessToken = new AccessToken(accessToken, new Date(expiresAtMilliseconds));
-
-    refreshTrustBoundary(newAccessToken, transportFactory);
-
-    return newAccessToken;
+    return new AccessToken(accessToken, new Date(expiresAtMilliseconds));
   }
 
   /**
@@ -830,16 +826,19 @@ public class ServiceAccountCredentials extends GoogleCredentials
 
   @InternalApi
   @Override
-  public String getTrustBoundaryUrl() throws IOException {
+  public String getRegionalAccessBoundaryUrl() throws IOException {
     return String.format(
-        OAuth2Utils.IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_SERVICE_ACCOUNT,
-        getUniverseDomain(),
-        getAccount());
+        OAuth2Utils.IAM_CREDENTIALS_ALLOWED_LOCATIONS_URL_FORMAT_SERVICE_ACCOUNT, getAccount());
   }
 
   @VisibleForTesting
   JwtCredentials getSelfSignedJwtCredentialsWithScope() {
     return selfSignedJwtCredentialsWithScope;
+  }
+
+  @Override
+  HttpTransportFactory getTransportFactory() {
+    return transportFactory;
   }
 
   @Override
@@ -1037,6 +1036,17 @@ public class ServiceAccountCredentials extends GoogleCredentials
         .build();
   }
 
+  /**
+   * Asynchronously provides the request metadata.
+   *
+   * <p>This method is non-blocking. For Self-signed JWT flows (which are calculated locally), it
+   * may execute the callback immediately on the calling thread. For standard flows, it may use the
+   * provided executor for background tasks.
+   *
+   * @param uri The URI of the request.
+   * @param executor The executor to use for any required background tasks.
+   * @param callback The callback to receive the metadata or any error.
+   */
   @Override
   public void getRequestMetadata(
       final URI uri, Executor executor, final RequestMetadataCallback callback) {
@@ -1059,7 +1069,16 @@ public class ServiceAccountCredentials extends GoogleCredentials
     }
   }
 
-  /** Provide the request metadata by putting an access JWT directly in the metadata. */
+  /**
+   * Synchronously provides the request metadata.
+   *
+   * <p>This method is blocking. For standard flows, it will wait for a network call to complete.
+   * For Self-signed JWT flows, it calculates the token locally.
+   *
+   * @param uri The URI of the request.
+   * @return The request metadata containing the authorization header.
+   * @throws IOException If an error occurs while fetching or calculating the token.
+   */
   @Override
   public Map<String, List<String>> getRequestMetadata(URI uri) throws IOException {
     if (createScopedRequired() && uri == null) {
@@ -1128,6 +1147,8 @@ public class ServiceAccountCredentials extends GoogleCredentials
     }
 
     Map<String, List<String>> requestMetadata = jwtCredentials.getRequestMetadata(null);
+    requestMetadata = addRegionalAccessBoundaryToRequestMetadata(uri, requestMetadata);
+    refreshRegionalAccessBoundaryWithSelfSignedJwtIfExpired(uri, requestMetadata);
     return addQuotaProjectIdToRequestMetadata(quotaProjectId, requestMetadata);
   }
 

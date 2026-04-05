@@ -66,8 +66,8 @@ public class TestUtils {
       URI.create("https://auth.cloud.google/authorize");
   public static final URI WORKFORCE_IDENTITY_FEDERATION_TOKEN_SERVER_URI =
       URI.create("https://sts.googleapis.com/v1/oauthtoken");
-  public static final String TRUST_BOUNDARY_ENCODED_LOCATION = "0x800000";
-  public static final List<String> TRUST_BOUNDARY_LOCATIONS =
+  public static final String REGIONAL_ACCESS_BOUNDARY_ENCODED_LOCATION = "0x800000";
+  public static final List<String> REGIONAL_ACCESS_BOUNDARY_LOCATIONS =
       ImmutableList.of("us-central1", "us-central2");
 
   private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();

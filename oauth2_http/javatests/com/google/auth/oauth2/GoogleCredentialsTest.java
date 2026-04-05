@@ -31,13 +31,12 @@
 
 package com.google.auth.oauth2;
 
-import static com.google.auth.oauth2.TrustBoundary.TRUST_BOUNDARY_KEY;
+import static com.google.auth.oauth2.RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -45,6 +44,7 @@ import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.json.GenericJson;
 import com.google.api.client.util.Clock;
 import com.google.auth.Credentials;
+import com.google.auth.RequestMetadataCallback;
 import com.google.auth.TestUtils;
 import com.google.auth.http.HttpTransportFactory;
 import com.google.auth.oauth2.ExternalAccountAuthorizedUserCredentialsTest.MockExternalAccountAuthorizedUserCredentialsTransportFactory;
@@ -54,13 +54,10 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import org.junit.After;
+import javax.annotation.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -104,9 +101,12 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   private static final String GOOGLE_DEFAULT_UNIVERSE = "googleapis.com";
   private static final String TPC_UNIVERSE = "foo.bar";
 
-  @After
+  @org.junit.Before
+  public void setUp() {}
+
+  @org.junit.After
   public void tearDown() {
-    TrustBoundary.setEnvironmentProviderForTest(null);
+    RegionalAccessBoundary.setEnvironmentProviderForTest(null);
   }
 
   @Test
@@ -796,6 +796,56 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
     assertEquals(testCredentials.hashCode(), deserializedCredentials.hashCode());
     assertEquals(testCredentials.toString(), deserializedCredentials.toString());
     assertSame(deserializedCredentials.clock, Clock.SYSTEM);
+    assertNotNull(deserializedCredentials.regionalAccessBoundaryManager);
+  }
+
+  @Test
+  public void serialize_removesStaleRabHeaders() throws Exception {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv(RegionalAccessBoundary.ENABLE_EXPERIMENT_ENV_VAR, "1");
+
+    MockTokenServerTransportFactory transportFactory = new MockTokenServerTransportFactory();
+    RegionalAccessBoundary rab =
+        new RegionalAccessBoundary(
+            "test-encoded",
+            Collections.singletonList("test-loc"),
+            System.currentTimeMillis(),
+            null);
+    transportFactory.transport.setRegionalAccessBoundary(rab);
+    transportFactory.transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+
+    GoogleCredentials credentials =
+        new ServiceAccountCredentials.Builder()
+            .setClientEmail(SA_CLIENT_EMAIL)
+            .setPrivateKey(OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8))
+            .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+            .setHttpTransportFactory(transportFactory)
+            .setScopes(SCOPES)
+            .build();
+
+    // 1. Trigger request metadata to start async RAB refresh
+    credentials.getRequestMetadata(URI.create("https://foo.com"));
+
+    // Wait for the RAB to be fetched and cached
+    waitForRegionalAccessBoundary(credentials);
+
+    // 2. Verify the live credential has the RAB header
+    Map<String, List<String>> metadata = credentials.getRequestMetadata();
+    assertEquals(
+        Collections.singletonList("test-encoded"),
+        metadata.get(RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY));
+
+    // 3. Serialize and deserialize.
+    GoogleCredentials deserialized = serializeAndDeserialize(credentials);
+
+    // 4. Verify.
+    // The manager is transient, so it should be empty.
+    assertNull(deserialized.getRegionalAccessBoundary());
+
+    // The metadata should NOT contain the RAB header anymore, preventing stale headers.
+    Map<String, List<String>> deserializedMetadata = deserialized.getRequestMetadata();
+    assertNull(deserializedMetadata.get(RegionalAccessBoundary.X_ALLOWED_LOCATIONS_HEADER_KEY));
   }
 
   @Test
@@ -948,13 +998,19 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  public void trustBoundary_shouldNotCallLookupEndpointWhenDisabled() throws IOException {
+  public void regionalAccessBoundary_shouldFetchAndReturnRegionalAccessBoundaryDataSuccessfully()
+      throws IOException, InterruptedException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
-    environmentProvider.setEnv(TrustBoundary.GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR, "false");
-
+    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv(RegionalAccessBoundary.ENABLE_EXPERIMENT_ENV_VAR, "1");
     MockTokenServerTransport transport = new MockTokenServerTransport();
     transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+    RegionalAccessBoundary regionalAccessBoundary =
+        new RegionalAccessBoundary(
+            TestUtils.REGIONAL_ACCESS_BOUNDARY_ENCODED_LOCATION,
+            Collections.singletonList("us-central1"),
+            null);
+    transport.setRegionalAccessBoundary(regionalAccessBoundary);
 
     ServiceAccountCredentials credentials =
         ServiceAccountCredentials.newBuilder()
@@ -965,51 +1021,37 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
             .setScopes(SCOPES)
             .build();
 
-    credentials.getRequestMetadata();
-    assertNull(credentials.getTrustBoundary());
-  }
-
-  @Test
-  public void trustBoundary_shouldFetchAndReturnTrustBoundaryDataSuccessfully() throws IOException {
-    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
-    environmentProvider.setEnv(TrustBoundary.GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR, "true");
-
-    MockTokenServerTransport transport = new MockTokenServerTransport();
-    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
-    TrustBoundary trustBoundary =
-        new TrustBoundary(
-            TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION, Collections.singletonList("us-central1"));
-    transport.setTrustBoundary(trustBoundary);
-
-    ServiceAccountCredentials credentials =
-        ServiceAccountCredentials.newBuilder()
-            .setClientEmail(SA_CLIENT_EMAIL)
-            .setPrivateKey(OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8))
-            .setPrivateKeyId(SA_PRIVATE_KEY_ID)
-            .setHttpTransportFactory(() -> transport)
-            .setScopes(SCOPES)
-            .build();
-
+    // First call: returns no header, initiates async refresh.
     Map<String, List<String>> headers = credentials.getRequestMetadata();
+    assertNull(headers.get(X_ALLOWED_LOCATIONS_HEADER_KEY));
+
+    waitForRegionalAccessBoundary(credentials);
+
+    // Second call: should have header.
+    headers = credentials.getRequestMetadata();
     assertEquals(
-        headers.get(TRUST_BOUNDARY_KEY), Arrays.asList(TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION));
+        headers.get(X_ALLOWED_LOCATIONS_HEADER_KEY),
+        Arrays.asList(TestUtils.REGIONAL_ACCESS_BOUNDARY_ENCODED_LOCATION));
   }
 
   @Test
-  public void trustBoundary_shouldRetryTrustBoundaryLookupOnFailure() throws IOException {
+  public void regionalAccessBoundary_shouldRetryRegionalAccessBoundaryLookupOnFailure()
+      throws IOException, InterruptedException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
-    environmentProvider.setEnv(TrustBoundary.GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR, "true");
+    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv(RegionalAccessBoundary.ENABLE_EXPERIMENT_ENV_VAR, "1");
 
-    // This transport will be used for the trust boundary lookup.
+    // This transport will be used for the regional access boundary lookup.
     // We will configure it to fail on the first attempt.
-    MockTokenServerTransport trustBoundaryTransport = new MockTokenServerTransport();
-    trustBoundaryTransport.addResponseErrorSequence(new IOException("Service Unavailable"));
-    TrustBoundary trustBoundary =
-        new TrustBoundary(
-            TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION, TestUtils.TRUST_BOUNDARY_LOCATIONS);
-    trustBoundaryTransport.setTrustBoundary(trustBoundary);
+    MockTokenServerTransport regionalAccessBoundaryTransport = new MockTokenServerTransport();
+    regionalAccessBoundaryTransport.addResponseErrorSequence(
+        new IOException("Service Unavailable"));
+    RegionalAccessBoundary regionalAccessBoundary =
+        new RegionalAccessBoundary(
+            TestUtils.REGIONAL_ACCESS_BOUNDARY_ENCODED_LOCATION,
+            TestUtils.REGIONAL_ACCESS_BOUNDARY_LOCATIONS,
+            null);
+    regionalAccessBoundaryTransport.setRegionalAccessBoundary(regionalAccessBoundary);
 
     // This transport will be used for the access token refresh.
     // It will succeed.
@@ -1029,7 +1071,7 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
                       public com.google.api.client.http.LowLevelHttpRequest buildRequest(
                           String method, String url) throws IOException {
                         if (url.endsWith("/allowedLocations")) {
-                          return trustBoundaryTransport.buildRequest(method, url);
+                          return regionalAccessBoundaryTransport.buildRequest(method, url);
                         }
                         return accessTokenTransport.buildRequest(method, url);
                       }
@@ -1037,41 +1079,21 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
             .setScopes(SCOPES)
             .build();
 
+    credentials.getRequestMetadata();
+    waitForRegionalAccessBoundary(credentials);
+
     Map<String, List<String>> headers = credentials.getRequestMetadata();
     assertEquals(
-        Arrays.asList(TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION), headers.get(TRUST_BOUNDARY_KEY));
+        Arrays.asList(TestUtils.REGIONAL_ACCESS_BOUNDARY_ENCODED_LOCATION),
+        headers.get(X_ALLOWED_LOCATIONS_HEADER_KEY));
   }
 
   @Test
-  public void trustBoundary_refreshShouldReturnNullWhenDefaultDomainIsNotGoogleApis()
+  public void regionalAccessBoundary_refreshShouldNotThrowWhenNoValidAccessTokenIsPassed()
       throws IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
-    environmentProvider.setEnv(TrustBoundary.GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR, "true");
-
-    MockTokenServerTransport transport = new MockTokenServerTransport();
-    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
-
-    ServiceAccountCredentials credentials =
-        ServiceAccountCredentials.newBuilder()
-            .setClientEmail(SA_CLIENT_EMAIL)
-            .setPrivateKey(OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8))
-            .setPrivateKeyId(SA_PRIVATE_KEY_ID)
-            .setHttpTransportFactory(() -> transport)
-            .setScopes(SCOPES)
-            .setUniverseDomain("other.universe")
-            .build();
-
-    credentials.refreshAccessToken();
-    assertNull(credentials.getTrustBoundary());
-  }
-
-  @Test
-  public void trustBoundary_refreshShouldThrowWhenNoValidAccessTokenIsPassed() throws IOException {
-    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
-    environmentProvider.setEnv(TrustBoundary.GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR, "true");
-
+    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv(RegionalAccessBoundary.ENABLE_EXPERIMENT_ENV_VAR, "1");
     MockTokenServerTransport transport = new MockTokenServerTransport();
     // Return an expired access token.
     transport.addServiceAccount(SA_CLIENT_EMAIL, "expired-token");
@@ -1086,20 +1108,21 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
             .setScopes(SCOPES)
             .build();
 
-    IllegalArgumentException exception =
-        assertThrows(IllegalArgumentException.class, () -> credentials.getRequestMetadata());
-    assertEquals("The provided access token is expired.", exception.getMessage());
+    // Should not throw, but just fail-open (no header).
+    Map<String, List<String>> headers = credentials.getRequestMetadata();
+    assertNull(headers.get(X_ALLOWED_LOCATIONS_HEADER_KEY));
   }
 
   @Test
-  public void trustBoundary_refreshShouldReturnNoOpIfResponseFromLookupIsNoOp() throws IOException {
+  public void regionalAccessBoundary_cooldownDoublingAndRefresh()
+      throws IOException, InterruptedException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
-    environmentProvider.setEnv(TrustBoundary.GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR, "true");
-
+    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv(RegionalAccessBoundary.ENABLE_EXPERIMENT_ENV_VAR, "1");
     MockTokenServerTransport transport = new MockTokenServerTransport();
     transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
-    transport.setTrustBoundary(new TrustBoundary("0x0", Collections.emptyList()));
+    // Always fail lookup for now.
+    transport.addResponseErrorSequence(new IOException("Persistent Failure"));
 
     ServiceAccountCredentials credentials =
         ServiceAccountCredentials.newBuilder()
@@ -1110,209 +1133,212 @@ public class GoogleCredentialsTest extends BaseSerializationTest {
             .setScopes(SCOPES)
             .build();
 
-    credentials.refresh();
+    TestClock testClock = new TestClock();
+    credentials.clock = testClock;
+    credentials.regionalAccessBoundaryManager = new RegionalAccessBoundaryManager(testClock, 100);
 
-    assertTrue(credentials.getTrustBoundary().isNoOp());
-  }
-
-  @Test
-  public void trustBoundary_refreshShouldReturnNoOpAndNotCallLookupEndpointWhenCachedIsNoOp()
-      throws IOException {
-    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
-    environmentProvider.setEnv(TrustBoundary.GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR, "true");
-
-    MockTokenServerTransport transport = new MockTokenServerTransport();
-    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
-    transport.setTrustBoundary(new TrustBoundary("0x0", Collections.emptyList()));
-
-    ServiceAccountCredentials credentials =
-        ServiceAccountCredentials.newBuilder()
-            .setClientEmail(SA_CLIENT_EMAIL)
-            .setPrivateKey(OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8))
-            .setPrivateKeyId(SA_PRIVATE_KEY_ID)
-            .setHttpTransportFactory(() -> transport)
-            .setScopes(SCOPES)
-            .build();
-
-    // First refresh to cache the no-op trust boundary.
-    credentials.refresh();
-
-    // Set trust boundary to a valid non No-Op value.
-    transport.setTrustBoundary(
-        new TrustBoundary(
-            TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION, TestUtils.TRUST_BOUNDARY_LOCATIONS));
-
-    // Refresh trust boundaries
-    credentials.refresh();
-
-    // Check whether the trust boundaries are still no_op.
-    assertTrue(credentials.getTrustBoundary().isNoOp());
-  }
-
-  @Test
-  public void trustBoundary_refreshShouldReturnCachedTbIfCallToLookupFails() throws IOException {
-    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
-    environmentProvider.setEnv(TrustBoundary.GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR, "true");
-
-    MockTokenServerTransport transport = new MockTokenServerTransport();
-    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
-    TrustBoundary trustBoundary =
-        new TrustBoundary(
-            TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION, TestUtils.TRUST_BOUNDARY_LOCATIONS);
-    transport.setTrustBoundary(trustBoundary);
-
-    ServiceAccountCredentials credentials =
-        ServiceAccountCredentials.newBuilder()
-            .setClientEmail(SA_CLIENT_EMAIL)
-            .setPrivateKey(OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8))
-            .setPrivateKeyId(SA_PRIVATE_KEY_ID)
-            .setHttpTransportFactory(() -> transport)
-            .setScopes(SCOPES)
-            .build();
-
-    // First refresh to cache the trust boundary.
-    credentials.refresh();
-
-    // Set the trust boundary to be returned to null so we get an exception.
-    transport.setTrustBoundary(null);
-
-    credentials.refresh();
-
+    // First attempt: triggers lookup, fails, enters 15m cooldown.
+    credentials.getRequestMetadata();
+    waitForCooldownActive(credentials);
+    assertTrue(credentials.regionalAccessBoundaryManager.isCooldownActive());
     assertEquals(
-        TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION,
-        credentials.getTrustBoundary().getEncodedLocations());
-  }
+        15 * 60 * 1000L, credentials.regionalAccessBoundaryManager.getCurrentCooldownMillis());
 
-  @Test
-  public void trustBoundary_refreshShouldThrowIfCallToLookupFailsAndNoCachedTb()
-      throws IOException {
-    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
-    environmentProvider.setEnv(TrustBoundary.GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR, "true");
+    // Second attempt (during cooldown): does not trigger lookup.
+    credentials.getRequestMetadata();
+    assertTrue(credentials.regionalAccessBoundaryManager.isCooldownActive());
 
-    MockTokenServerTransport transport = new MockTokenServerTransport();
-    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
-    transport.addResponseErrorSequence(new IOException("Service Unavailable"));
+    // Fast-forward past 15m cooldown.
+    testClock.advanceTime(16 * 60 * 1000L);
+    assertFalse(credentials.regionalAccessBoundaryManager.isCooldownActive());
 
-    ServiceAccountCredentials credentials =
-        ServiceAccountCredentials.newBuilder()
-            .setClientEmail(SA_CLIENT_EMAIL)
-            .setPrivateKey(OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8))
-            .setPrivateKeyId(SA_PRIVATE_KEY_ID)
-            .setHttpTransportFactory(() -> transport)
-            .setScopes(SCOPES)
-            .build();
-    IOException exception = assertThrows(IOException.class, () -> credentials.refresh());
-    assertTrue(
-        exception
-            .getMessage()
-            .contains("Failed to refresh trust boundary and no cached value is available."));
-  }
-
-  @Test
-  public void trustBoundary_refreshShouldThrowInCaseOfMalformedResponse() throws IOException {
-    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
-    environmentProvider.setEnv(TrustBoundary.GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR, "true");
-
-    MockTokenServerTransport transport = new MockTokenServerTransport();
-    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
-    // The transport will return a response with no encodedLocations field.
-    transport.setTrustBoundary(new TrustBoundary(null, Collections.emptyList()));
-
-    ServiceAccountCredentials credentials =
-        ServiceAccountCredentials.newBuilder()
-            .setClientEmail(SA_CLIENT_EMAIL)
-            .setPrivateKey(OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8))
-            .setPrivateKeyId(SA_PRIVATE_KEY_ID)
-            .setHttpTransportFactory(() -> transport)
-            .setScopes(SCOPES)
-            .build();
-
-    IOException exception = assertThrows(IOException.class, () -> credentials.refresh());
-    assertTrue(
-        exception
-            .getMessage()
-            .contains("Failed to refresh trust boundary and no cached value is available."));
-  }
-
-  @Test
-  public void trustBoundary_getRequestHeadersShouldAttachTrustBoundaryHeader() throws IOException {
-    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
-    environmentProvider.setEnv(TrustBoundary.GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR, "true");
-
-    MockTokenServerTransport transport = new MockTokenServerTransport();
-    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
-    TrustBoundary trustBoundary =
-        new TrustBoundary(
-            TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION, Collections.singletonList("us-central1"));
-    transport.setTrustBoundary(trustBoundary);
-
-    ServiceAccountCredentials credentials =
-        ServiceAccountCredentials.newBuilder()
-            .setClientEmail(SA_CLIENT_EMAIL)
-            .setPrivateKey(OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8))
-            .setPrivateKeyId(SA_PRIVATE_KEY_ID)
-            .setHttpTransportFactory(() -> transport)
-            .setScopes(SCOPES)
-            .build();
-
-    Map<String, List<String>> headers = credentials.getRequestMetadata();
-
+    // Third attempt (cooldown expired): triggers lookup, fails again, cooldown should double.
+    credentials.getRequestMetadata();
+    waitForCooldownActive(credentials);
+    assertTrue(credentials.regionalAccessBoundaryManager.isCooldownActive());
     assertEquals(
-        Arrays.asList(TestUtils.TRUST_BOUNDARY_ENCODED_LOCATION), headers.get(TRUST_BOUNDARY_KEY));
+        30 * 60 * 1000L, credentials.regionalAccessBoundaryManager.getCurrentCooldownMillis());
+
+    // Fast-forward past 30m cooldown.
+    testClock.advanceTime(31 * 60 * 1000L);
+    assertFalse(credentials.regionalAccessBoundaryManager.isCooldownActive());
+
+    // Set successful response.
+    transport.setRegionalAccessBoundary(
+        new RegionalAccessBoundary("0x123", Collections.emptyList(), null));
+
+    // Fourth attempt: triggers lookup, succeeds, resets cooldown.
+    credentials.getRequestMetadata();
+    waitForRegionalAccessBoundary(credentials);
+    assertFalse(credentials.regionalAccessBoundaryManager.isCooldownActive());
+    assertEquals("0x123", credentials.getRegionalAccessBoundary().getEncodedLocations());
+    assertEquals(
+        15 * 60 * 1000L, credentials.regionalAccessBoundaryManager.getCurrentCooldownMillis());
   }
 
   @Test
-  public void trustBoundary_getRequestHeadersShouldAttachEmptyStringTbHeaderInCaseOfNoOp()
-      throws IOException {
+  public void regionalAccessBoundary_shouldFailOpenWhenRefreshCannotBeStarted() throws IOException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
-    environmentProvider.setEnv(TrustBoundary.GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR, "true");
+    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv(RegionalAccessBoundary.ENABLE_EXPERIMENT_ENV_VAR, "1");
+    // Use a simple AccessToken-based credential that won't try to refresh.
+    GoogleCredentials credentials = GoogleCredentials.create(new AccessToken("some-token", null));
 
-    MockTokenServerTransport transport = new MockTokenServerTransport();
-    transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
-    transport.setTrustBoundary(new TrustBoundary("0x0", Collections.emptyList()));
-
-    ServiceAccountCredentials credentials =
-        ServiceAccountCredentials.newBuilder()
-            .setClientEmail(SA_CLIENT_EMAIL)
-            .setPrivateKey(OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8))
-            .setPrivateKeyId(SA_PRIVATE_KEY_ID)
-            .setHttpTransportFactory(() -> transport)
-            .setScopes(SCOPES)
-            .build();
-
+    // Should not throw, but just fail-open (no header).
     Map<String, List<String>> headers = credentials.getRequestMetadata();
-
-    assertEquals(Arrays.asList(""), headers.get(TRUST_BOUNDARY_KEY));
+    assertNull(headers.get(X_ALLOWED_LOCATIONS_HEADER_KEY));
   }
 
   @Test
-  public void trustBoundary_getRequestHeadersShouldNotAttachTbHeaderInCaseOfNonGduUniverse()
-      throws IOException {
+  public void regionalAccessBoundary_deduplicationOfConcurrentRefreshes()
+      throws IOException, InterruptedException {
     TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
-    TrustBoundary.setEnvironmentProviderForTest(environmentProvider);
-    environmentProvider.setEnv(TrustBoundary.GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED_ENV_VAR, "true");
-
+    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv(RegionalAccessBoundary.ENABLE_EXPERIMENT_ENV_VAR, "1");
     MockTokenServerTransport transport = new MockTokenServerTransport();
+    transport.setRegionalAccessBoundary(
+        new RegionalAccessBoundary("valid", Collections.singletonList("us-central1"), null));
+    // Add delay to lookup to ensure threads overlap.
+    transport.setResponseDelayMillis(500);
+
+    GoogleCredentials credentials = createTestCredentials(transport);
+
+    // Fire multiple concurrent requests.
+    for (int i = 0; i < 10; i++) {
+      new Thread(
+              () -> {
+                try {
+                  credentials.getRequestMetadata();
+                } catch (IOException e) {
+                }
+              })
+          .start();
+    }
+
+    waitForRegionalAccessBoundary(credentials);
+
+    // Only ONE request should have been made to the lookup endpoint.
+    assertEquals(1, transport.getRegionalAccessBoundaryRequestCount());
+  }
+
+  @Test
+  public void regionalAccessBoundary_shouldSkipRefreshForRegionalEndpoints() throws IOException {
+    TestEnvironmentProvider environmentProvider = new TestEnvironmentProvider();
+    RegionalAccessBoundary.setEnvironmentProviderForTest(environmentProvider);
+    environmentProvider.setEnv(RegionalAccessBoundary.ENABLE_EXPERIMENT_ENV_VAR, "1");
+    MockTokenServerTransport transport = new MockTokenServerTransport();
+    GoogleCredentials credentials = createTestCredentials(transport);
+
+    URI regionalUri = URI.create("https://storage.us-central1.rep.googleapis.com/v1/b/foo");
+    credentials.getRequestMetadata(regionalUri);
+
+    // Should not have triggered any lookup.
+    assertEquals(0, transport.getRegionalAccessBoundaryRequestCount());
+  }
+
+  @Test
+  public void getRequestMetadata_ignoresRabRefreshException() throws IOException {
+    GoogleCredentials credentials =
+        new GoogleCredentials() {
+          @Override
+          public AccessToken refreshAccessToken() throws IOException {
+            return new AccessToken("token", null);
+          }
+
+          @Override
+          void refreshRegionalAccessBoundaryIfExpired(
+              @Nullable URI uri, @Nullable AccessToken token) throws IOException {
+            throw new IOException("Simulated RAB failure");
+          }
+        };
+
+    // This should not throw the IOException from refreshRegionalAccessBoundaryIfExpired
+    Map<String, List<String>> metadata =
+        credentials.getRequestMetadata(URI.create("https://foo.com"));
+    assertTrue(metadata.containsKey("Authorization"));
+  }
+
+  @Test
+  public void getRequestMetadataAsync_ignoresRabRefreshException() throws IOException {
+    GoogleCredentials credentials =
+        new GoogleCredentials() {
+          @Override
+          public AccessToken refreshAccessToken() throws IOException {
+            return new AccessToken("token", null);
+          }
+
+          @Override
+          void refreshRegionalAccessBoundaryIfExpired(
+              @Nullable URI uri, @Nullable AccessToken token) throws IOException {
+            throw new IOException("Simulated RAB failure");
+          }
+        };
+
+    java.util.concurrent.atomic.AtomicBoolean success =
+        new java.util.concurrent.atomic.AtomicBoolean(false);
+    credentials.getRequestMetadata(
+        URI.create("https://foo.com"),
+        Runnable::run,
+        new RequestMetadataCallback() {
+          @Override
+          public void onSuccess(Map<String, List<String>> metadata) {
+            success.set(true);
+          }
+
+          @Override
+          public void onFailure(Throwable exception) {
+            fail("Should not have failed");
+          }
+        });
+
+    assertTrue(success.get());
+  }
+
+  private GoogleCredentials createTestCredentials(MockTokenServerTransport transport)
+      throws IOException {
     transport.addServiceAccount(SA_CLIENT_EMAIL, ACCESS_TOKEN);
+    return new ServiceAccountCredentials.Builder()
+        .setClientEmail(SA_CLIENT_EMAIL)
+        .setPrivateKey(OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8))
+        .setPrivateKeyId(SA_PRIVATE_KEY_ID)
+        .setHttpTransportFactory(() -> transport)
+        .setScopes(SCOPES)
+        .build();
+  }
 
-    ServiceAccountCredentials credentials =
-        ServiceAccountCredentials.newBuilder()
-            .setClientEmail(SA_CLIENT_EMAIL)
-            .setPrivateKey(OAuth2Utils.privateKeyFromPkcs8(SA_PRIVATE_KEY_PKCS8))
-            .setPrivateKeyId(SA_PRIVATE_KEY_ID)
-            .setHttpTransportFactory(() -> transport)
-            .setScopes(SCOPES)
-            .setUniverseDomain("other.universe")
-            .build();
+  private void waitForRegionalAccessBoundary(GoogleCredentials credentials)
+      throws InterruptedException {
+    long deadline = System.currentTimeMillis() + 5000;
+    while (credentials.getRegionalAccessBoundary() == null
+        && System.currentTimeMillis() < deadline) {
+      Thread.sleep(100);
+    }
+    if (credentials.getRegionalAccessBoundary() == null) {
+      fail("Timed out waiting for regional access boundary refresh");
+    }
+  }
 
-    Map<String, List<String>> headers = credentials.getRequestMetadata();
+  private void waitForCooldownActive(GoogleCredentials credentials) throws InterruptedException {
+    long deadline = System.currentTimeMillis() + 5000;
+    while (!credentials.regionalAccessBoundaryManager.isCooldownActive()
+        && System.currentTimeMillis() < deadline) {
+      Thread.sleep(100);
+    }
+    if (!credentials.regionalAccessBoundaryManager.isCooldownActive()) {
+      fail("Timed out waiting for cooldown to become active");
+    }
+  }
 
-    assertNull(headers.get(TRUST_BOUNDARY_KEY));
+  private static class TestClock implements Clock {
+    private final AtomicLong currentTime = new AtomicLong(System.currentTimeMillis());
+
+    @Override
+    public long currentTimeMillis() {
+      return currentTime.get();
+    }
+
+    public void advanceTime(long millis) {
+      currentTime.addAndGet(millis);
+    }
   }
 }

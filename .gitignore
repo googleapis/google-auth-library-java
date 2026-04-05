@@ -17,3 +17,7 @@ target/
 
 # MacOS
 .DS_Store
+
+# Conductor and Gemini
+conductor/
+Gemini/
