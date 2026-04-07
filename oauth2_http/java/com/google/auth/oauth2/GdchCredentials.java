@@ -895,14 +895,18 @@ public class GdchCredentials extends GoogleCredentials {
   /**
    * Extracts the private key value 's' from the SEC1 bytes using fixed offset.
    *
-   * <p>Assumes the prefix has already been verified.
+   * <p>Assumes the prefix has already been verified by {@link #hasStandardSec1P256Prefix(byte[])}.
    *
    * @param bytes The raw bytes of the key.
    * @return The BigInteger value of 's'.
    */
   private static BigInteger extractPrivateKeyValue(byte[] bytes) {
+    // P-256 private key size is 32 bytes as per RFC 5915 Section 3.
     byte[] sBytes = new byte[32];
+    // Copy 32 bytes starting at offset 7 (after the 7-byte metadata prefix verified by
+    // hasStandardSec1P256Prefix).
     System.arraycopy(bytes, 7, sBytes, 0, 32);
+    // Use signum 1 to ensure the byte array is interpreted as a positive integer.
     return new BigInteger(1, sBytes);
   }
 
@@ -932,7 +936,11 @@ public class GdchCredentials extends GoogleCredentials {
 
       return keyFactory.generatePrivate(keySpec);
     } catch (GeneralSecurityException e) {
-      throw new GoogleAuthException(false, 0, "Failed to create EC Private Key", e);
+      throw new GoogleAuthException(
+          false,
+          0,
+          "Failed to create EC Private Key for GDCH. Please ensure the private key data is valid and represents a P-256 private key.",
+          e);
     }
   }
 }
