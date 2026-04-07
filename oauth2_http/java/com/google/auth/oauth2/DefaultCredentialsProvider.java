@@ -52,7 +52,7 @@ import java.util.logging.Logger;
  * <p>An instance represents the per-process state used to get and cache the credential and allows
  * overriding the state and environment for testing purposes.
  */
-class DefaultCredentialsProvider {
+public class DefaultCredentialsProvider {
   static final DefaultCredentialsProvider DEFAULT = new DefaultCredentialsProvider();
   static final String CREDENTIAL_ENV_VAR = "GOOGLE_APPLICATION_CREDENTIALS";
   static final String QUOTA_PROJECT_ENV_VAR = "GOOGLE_CLOUD_QUOTA_PROJECT";
@@ -89,7 +89,7 @@ class DefaultCredentialsProvider {
   private boolean checkedAppEngine = false;
   private boolean checkedComputeEngine = false;
 
-  DefaultCredentialsProvider() {}
+  public DefaultCredentialsProvider() {}
 
   /**
    * Returns the Application Default Credentials.
@@ -113,7 +113,7 @@ class DefaultCredentialsProvider {
    * @return the credentials instance.
    * @throws IOException if the credentials cannot be created in the current environment.
    */
-  final GoogleCredentials getDefaultCredentials(HttpTransportFactory transportFactory)
+  public final GoogleCredentials getDefaultCredentials(HttpTransportFactory transportFactory)
       throws IOException {
     synchronized (this) {
       if (cachedCredentials == null) {
