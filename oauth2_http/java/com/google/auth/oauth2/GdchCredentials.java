@@ -47,6 +47,7 @@ import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.api.client.util.Clock;
 import com.google.api.client.util.GenericData;
+import com.google.api.client.util.PemReader;
 import com.google.api.client.util.SecurityUtils;
 import com.google.api.client.util.StringUtils;
 import com.google.api.core.ObsoleteApi;
@@ -62,10 +63,18 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
+import java.io.Reader;
+import java.io.StringReader;
+import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.AlgorithmParameters;
 import java.security.GeneralSecurityException;
+import java.security.KeyFactory;
 import java.security.PrivateKey;
+import java.security.spec.ECGenParameterSpec;
+import java.security.spec.ECParameterSpec;
+import java.security.spec.ECPrivateKeySpec;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Map;
@@ -87,6 +96,9 @@ public class GdchCredentials extends GoogleCredentials {
   // See go/gdch-python-auth-lib for more information.
   private static final String SERVICE_ACCOUNT_TOKEN_TYPE =
       "urn:k8s:params:oauth:token-type:serviceaccount";
+
+  private static final String PRIVATE_KEY_PEM_TITLE = "PRIVATE KEY";
+  private static final String EC_PRIVATE_KEY_PEM_TITLE = "EC PRIVATE KEY";
 
   private static final int DEFAULT_LIFETIME_IN_SECONDS = 3600;
 
@@ -200,7 +212,7 @@ public class GdchCredentials extends GoogleCredentials {
     String formatVersion = validateField((String) json.get("format_version"), "format_version");
     String projectId = validateField((String) json.get("project"), "project");
     String privateKeyId = validateField((String) json.get("private_key_id"), "private_key_id");
-    String privateKeyPkcs8 = validateField((String) json.get("private_key"), "private_key");
+    String privateKeyPem = validateField((String) json.get("private_key"), "private_key");
     String serviceIdentityName = validateField((String) json.get("name"), "name");
     String tokenServerUriStringFromCreds =
         validateField((String) json.get("token_uri"), "token_uri");
@@ -227,21 +239,43 @@ public class GdchCredentials extends GoogleCredentials {
             .setCaCertPath(caCertPath)
             .setHttpTransportFactory(transportFactory);
 
-    return fromPkcs8(privateKeyPkcs8, builder);
+    return fromPem(privateKeyPem, builder);
   }
 
   /**
-   * Internal constructor.
+   * Reads a private key from a PEM encoded string, supporting both PKCS#8 and SEC1 formats.
    *
-   * @param privateKeyPkcs8 EC private key object for the service account in PKCS#8 format.
+   * <p>If the key is labeled with "PRIVATE KEY", it is parsed as PKCS#8 as per RFC 7468 Section 10.
+   * If it is labeled with "EC PRIVATE KEY", it is parsed as SEC1 as per RFC 5915 Section 3.
+   *
+   * @see <a href="https://datatracker.ietf.org/doc/html/rfc7468#section-10">RFC 7468 Section 10</a>
+   * @see <a href="https://datatracker.ietf.org/doc/html/rfc5915#section-3">RFC 5915 Section 3</a>
+   * @param privateKeyPem EC private key object for the service account in PEM format (PKCS#8 or
+   *     SEC1).
    * @param builder A builder for GdchCredentials.
    * @return an instance of GdchCredentials.
    */
-  static GdchCredentials fromPkcs8(String privateKeyPkcs8, GdchCredentials.Builder builder)
+  static GdchCredentials fromPem(String privateKeyPem, GdchCredentials.Builder builder)
       throws IOException {
-    // GDCH key generation natively only supports the EC algorithm.
-    PrivateKey privateKey =
-        OAuth2Utils.privateKeyFromPkcs8(privateKeyPkcs8, OAuth2Utils.Pkcs8Algorithm.EC);
+    Reader reader = new StringReader(privateKeyPem);
+    // Read the first section regardless of title
+    PemReader.Section section = PemReader.readFirstSectionAndClose(reader);
+
+    if (section == null) {
+      throw new GoogleAuthException(false, 0, "Invalid key data: no PEM section found.", null);
+    }
+
+    String title = section.getTitle();
+    PrivateKey privateKey;
+
+    if (PRIVATE_KEY_PEM_TITLE.equals(title)) {
+      privateKey = OAuth2Utils.privateKeyFromPkcs8(privateKeyPem, OAuth2Utils.Pkcs8Algorithm.EC);
+    } else if (EC_PRIVATE_KEY_PEM_TITLE.equals(title)) {
+      privateKey = privateKeyFromSec1(section.getBase64DecodedBytes());
+    } else {
+      throw new GoogleAuthException(false, 0, "Unsupported key type: " + title, null);
+    }
+
     builder.setPrivateKey(privateKey);
 
     return new GdchCredentials(builder);
@@ -813,5 +847,92 @@ public class GdchCredentials extends GoogleCredentials {
     System.arraycopy(s, 0, result, outputLength - s.length, s.length);
 
     return result;
+  }
+
+  /**
+   * Parses an EC private key in SEC1 format using fixed prefix verification.
+   *
+   * <p>This function assumes that standard SEC1 keys for P-256 generated by OpenSSL have a known,
+   * stable structure of bytes at the beginning. This "fingerprint" allows us to verify the format
+   * without complete ASN.1 parsing. If the fingerprint matches, we can safely extract the private
+   * key value using fixed offsets.
+   *
+   * @param bytes The raw bytes of the SEC1 key.
+   * @return The PrivateKey object.
+   * @throws GoogleAuthException If parsing fails or the key format is unsupported.
+   */
+  private static PrivateKey privateKeyFromSec1(byte[] bytes) throws IOException {
+    if (!hasStandardSec1P256Prefix(bytes)) {
+      throw new GoogleAuthException(
+          false, 0, "Unsupported SEC1 key format: standard prefix not found.", null);
+    }
+    BigInteger s = extractPrivateKeyValue(bytes);
+    return createEcPrivateKey(s);
+  }
+
+  /**
+   * Verifies if the bytes start with the standard SEC1 P-256 prefix.
+   *
+   * <p>The prefix is derived from the standard DER encoding of the ECPrivateKey structure defined
+   * in RFC 5915 Section 3. For P-256 with named curve parameters and public key included, the
+   * prefix is stable: <code>[0x30, 0x77, 0x02, 0x01, 0x01, 0x04, 0x20]</code>
+   *
+   * @see <a href="https://datatracker.ietf.org/doc/html/rfc5915#section-3">RFC 5915 Section 3</a>
+   * @param bytes The raw bytes of the key.
+   * @return true if the prefix matches.
+   */
+  private static boolean hasStandardSec1P256Prefix(byte[] bytes) {
+    if (bytes.length < 7) return false;
+    return bytes[0] == 0x30 // Sequence
+        && bytes[1] == 0x77 // Length
+        && bytes[2] == 0x02 // Integer
+        && bytes[3] == 0x01 // Length
+        && bytes[4] == 0x01 // Version
+        && bytes[5] == 0x04 // Octet String
+        && bytes[6] == 0x20; // Length 32
+  }
+
+  /**
+   * Extracts the private key value 's' from the SEC1 bytes using fixed offset.
+   *
+   * <p>Assumes the prefix has already been verified.
+   *
+   * @param bytes The raw bytes of the key.
+   * @return The BigInteger value of 's'.
+   */
+  private static BigInteger extractPrivateKeyValue(byte[] bytes) {
+    byte[] sBytes = new byte[32];
+    System.arraycopy(bytes, 7, sBytes, 0, 32);
+    return new BigInteger(1, sBytes);
+  }
+
+  /**
+   * Creates an EC PrivateKey from the private key value 's' using P-256 parameters.
+   *
+   * <p>Algorithm steps: 1. Get an instance of AlgorithmParameters for "EC". 2. Initialize it with
+   * secp256r1 curve spec (requirement as per GDCH supported curve). 3. Extract ECParameterSpec from
+   * parameters. 4. Create ECPrivateKeySpec with the extracted private key value and parameters. 5.
+   * Generate PrivateKey using KeyFactory.
+   *
+   * @param s The private key value.
+   * @return The PrivateKey object.
+   * @throws GoogleAuthException If key creation fails.
+   */
+  private static PrivateKey createEcPrivateKey(BigInteger s) throws IOException {
+    try {
+      AlgorithmParameters params = AlgorithmParameters.getInstance("EC");
+
+      params.init(new ECGenParameterSpec("secp256r1"));
+
+      ECParameterSpec ecParams = params.getParameterSpec(ECParameterSpec.class);
+
+      ECPrivateKeySpec keySpec = new ECPrivateKeySpec(s, ecParams);
+
+      KeyFactory keyFactory = KeyFactory.getInstance("EC");
+
+      return keyFactory.generatePrivate(keySpec);
+    } catch (GeneralSecurityException e) {
+      throw new GoogleAuthException(false, 0, "Failed to create EC Private Key", e);
+    }
   }
 }

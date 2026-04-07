@@ -463,7 +463,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
   }
 
   @Test
-  void fromPkcs8_correct() throws IOException {
+  void fromPem_correct() throws IOException {
     GdchCredentials.Builder builder =
         GdchCredentials.newBuilder()
             .setProjectId(PROJECT_ID)
@@ -472,7 +472,7 @@ class GdchCredentialsTest extends BaseSerializationTest {
             .setTokenServerUri(TOKEN_SERVER_URI)
             .setHttpTransportFactory(new MockTokenServerTransportFactory());
 
-    GdchCredentials credentials = GdchCredentials.fromPkcs8(PRIVATE_KEY_PKCS8, builder);
+    GdchCredentials credentials = GdchCredentials.fromPem(PRIVATE_KEY_PKCS8, builder);
     assertNotNull(credentials.getPrivateKey());
     assertEquals(PROJECT_ID, credentials.getProjectId());
   }
