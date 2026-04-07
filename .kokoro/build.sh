@@ -80,7 +80,7 @@ graalvm)
     # Run Unit and Integration Tests with Native Image
     bash .kokoro/populate-secrets.sh
     export GOOGLE_APPLICATION_CREDENTIALS="${KOKORO_GFILE_DIR}/secret_manager/java-it-service-account"
-    mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative -Pnative-test -Pslf4j2x test -pl 'oauth2_http' -Djavax.net.debug=all
+    mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative -Pnative-test -Pslf4j2x test -pl 'oauth2_http' -Dnative.image.args="-Djavax.net.debug=all"
     RETURN_CODE=$?
     ;;
 samples)
