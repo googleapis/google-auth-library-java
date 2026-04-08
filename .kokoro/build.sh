@@ -80,7 +80,28 @@ graalvm)
     # Run Unit and Integration Tests with Native Image
     bash .kokoro/populate-secrets.sh
     export GOOGLE_APPLICATION_CREDENTIALS="${KOKORO_GFILE_DIR}/secret_manager/java-it-service-account"
-    mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative -Pnative-test -Pslf4j2x test -pl 'oauth2_http'
+    
+    # GraalVM Native Image ignores JAVA_TOOL_OPTIONS at runtime. If the CI environment
+    # injects a custom truststore (e.g., for a proxy) via JAVA_TOOL_OPTIONS, we need to
+    # extract it and pass it explicitly to the native executable.
+    TRUST_STORE=""
+    if [[ "${JAVA_TOOL_OPTIONS}" =~ -Djavax.net.ssl.trustStore=([^ ]+) ]]; then
+        TRUST_STORE="${BASH_REMATCH[1]}"
+    fi
+    
+    # We use 'package' instead of 'test' to build the native image without automatically
+    # running it via the Maven plugin. This allows us to run it manually with the
+    # extracted truststore argument in the next step, avoiding complex Maven XML overrides.
+    mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative -Pnative-test -Pslf4j2x package -pl 'oauth2_http'
+    
+    # Run the native tests manually with the truststore
+    CMD="./oauth2_http/target/native-tests --xml-output-dir ./oauth2_http/target/native-test-reports"
+    if [ -n "$TRUST_STORE" ]; then
+        CMD="$CMD -Djavax.net.ssl.trustStore=$TRUST_STORE"
+    fi
+    
+    echo "Executing: $CMD"
+    $CMD
     RETURN_CODE=$?
     ;;
 samples)
