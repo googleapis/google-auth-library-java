@@ -82,12 +82,22 @@ graalvm)
     export GOOGLE_APPLICATION_CREDENTIALS="${KOKORO_GFILE_DIR}/secret_manager/java-it-service-account"
     
     # Extract trustStore if present in JAVA_TOOL_OPTIONS
-    NATIVE_TEST_RUNTIME_ARGS=""
+    TRUST_STORE=""
     if [[ "${JAVA_TOOL_OPTIONS}" =~ -Djavax.net.ssl.trustStore=([^ ]+) ]]; then
-        NATIVE_TEST_RUNTIME_ARGS="-Djavax.net.ssl.trustStore=${BASH_REMATCH[1]}"
+        TRUST_STORE="${BASH_REMATCH[1]}"
     fi
     
-    mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative -Pnative-test -Pslf4j2x test -pl 'oauth2_http' -DnativeTestRuntimeArgs="${NATIVE_TEST_RUNTIME_ARGS}"
+    # Build the native tests (stops at package phase, avoiding automatic test execution)
+    mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative -Pnative-test -Pslf4j2x package -pl 'oauth2_http'
+    
+    # Run the native tests manually with the truststore
+    CMD="./oauth2_http/target/native-tests --xml-output-dir ./oauth2_http/target/native-test-reports"
+    if [ -n "$TRUST_STORE" ]; then
+        CMD="$CMD -Djavax.net.ssl.trustStore=$TRUST_STORE"
+    fi
+    
+    echo "Executing: $CMD"
+    $CMD
     RETURN_CODE=$?
     ;;
 samples)
