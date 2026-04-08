@@ -21,6 +21,10 @@
     </snapshotRepository>
   </distributionManagement>
 
+  <properties>
+    <nativeTestRuntimeArgs></nativeTestRuntimeArgs>
+  </properties>
+
   <profiles>
     <profile>
       <id>native-test</id>
@@ -36,6 +40,15 @@
                 <include>**/IT*.java</include>
                 <include>**/functional/*.java</include>
             </includes>
+            </configuration>
+          </plugin>
+          <plugin>
+            <groupId>org.graalvm.buildtools</groupId>
+            <artifactId>native-maven-plugin</artifactId>
+            <configuration>
+              <runtimeArgs>
+                <runtimeArg>${nativeTestRuntimeArgs}</runtimeArg>
+              </runtimeArgs>
             </configuration>
           </plugin>
           <plugin>

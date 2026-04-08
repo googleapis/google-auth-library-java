@@ -80,7 +80,14 @@ graalvm)
     # Run Unit and Integration Tests with Native Image
     bash .kokoro/populate-secrets.sh
     export GOOGLE_APPLICATION_CREDENTIALS="${KOKORO_GFILE_DIR}/secret_manager/java-it-service-account"
-    mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative -Pnative-test -Pslf4j2x test -pl 'oauth2_http' -Dnative.image.args="-Djavax.net.ssl.trustStore=$JAVA_HOME/lib/security/cacerts"
+    
+    # Extract trustStore if present in JAVA_TOOL_OPTIONS
+    NATIVE_TEST_RUNTIME_ARGS=""
+    if [[ "${JAVA_TOOL_OPTIONS}" =~ -Djavax.net.ssl.trustStore=([^ ]+) ]]; then
+        NATIVE_TEST_RUNTIME_ARGS="-Djavax.net.ssl.trustStore=${BASH_REMATCH[1]}"
+    fi
+    
+    mvn -B ${INTEGRATION_TEST_ARGS} -ntp -Pnative -Pnative-test -Pslf4j2x test -pl 'oauth2_http' -DnativeTestRuntimeArgs="${NATIVE_TEST_RUNTIME_ARGS}"
     RETURN_CODE=$?
     ;;
 samples)
