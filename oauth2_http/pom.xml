@@ -45,11 +45,16 @@
           <plugin>
             <groupId>org.graalvm.buildtools</groupId>
             <artifactId>native-maven-plugin</artifactId>
-            <configuration>
-              <runtimeArgs>
-                <runtimeArg>${nativeTestRuntimeArgs}</runtimeArg>
-              </runtimeArgs>
-            </configuration>
+            <executions>
+              <execution>
+                <id>test-native</id>
+                <configuration>
+                  <runtimeArgs>
+                    <runtimeArg>${nativeTestRuntimeArgs}</runtimeArg>
+                  </runtimeArgs>
+                </configuration>
+              </execution>
+            </executions>
           </plugin>
           <plugin>
             <artifactId>maven-compiler-plugin</artifactId>
