@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.44.0](https://github.com/googleapis/google-auth-library-java/compare/v1.43.0...v1.44.0) (2026-04-20)
+
+
+### Features
+
+* Add getProjectId getter for ComputeEngineCredentials ([#1833](https://github.com/googleapis/google-auth-library-java/issues/1833)) ([6ff3821](https://github.com/googleapis/google-auth-library-java/commit/6ff3821abcc5024d5371c5d03a157891de5bda37))
+
+
+### Bug Fixes
+
+* **gdch:** Support EC private keys ([#1896](https://github.com/googleapis/google-auth-library-java/issues/1896)) ([27dac49](https://github.com/googleapis/google-auth-library-java/commit/27dac49622f33a2c2d435d7f1e0ece9f81133146))
+* ImpersonatedCredentials does not use Calendar for expiration ([#1908](https://github.com/googleapis/google-auth-library-java/issues/1908)) ([0f92593](https://github.com/googleapis/google-auth-library-java/commit/0f925933f3e94877ef84fd6c160ad91643f0d4b3))
+* **oauth2:** Mask sensitive tokens in HTTP logs ([#1900](https://github.com/googleapis/google-auth-library-java/issues/1900)) ([1a81a7e](https://github.com/googleapis/google-auth-library-java/commit/1a81a7e835ddad2521e7b0e930d80067a44de0df))
+* Update renovate config check to use npx ([#1917](https://github.com/googleapis/google-auth-library-java/issues/1917)) ([9ac2d43](https://github.com/googleapis/google-auth-library-java/commit/9ac2d4340ebc6a8582b898e97f65aeed3c1776d6))
+
 ## [1.43.0](https://github.com/googleapis/google-auth-library-java/compare/v1.42.1...v1.43.0) (2026-02-10)
 
 
